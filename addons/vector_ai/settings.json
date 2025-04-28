@@ -1,0 +1,7 @@
+{
+  "model": "gemini-1.5-pro",
+  "temperature": 0.7,
+  "max_output_tokens": 2048,
+  "dev_mode": false,
+  "proxy_url": "https://vector-ai-proxy.example.com/api/gemini"
+}

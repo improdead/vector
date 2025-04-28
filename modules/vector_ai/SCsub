@@ -1,0 +1,22 @@
+#!/usr/bin/env python
+
+Import("env")
+Import("env_modules")
+
+env_vector_ai = env_modules.Clone()
+
+# Source files
+module_sources = [
+    "register_types.cpp",
+    "vector_ai.cpp",
+    "vector_ai_dock.cpp",
+    "gemini_client.cpp",
+    "scene_analyzer.cpp",
+    "scene_modifier.cpp",
+]
+
+# Add module sources
+env_vector_ai.add_source_files(env.modules_sources, module_sources)
+
+# Add include directories
+env_vector_ai.Append(CPPPATH=["#modules/vector_ai"])
