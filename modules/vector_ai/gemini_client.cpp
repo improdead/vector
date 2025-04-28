@@ -59,39 +59,39 @@ String GeminiClient::_get_settings_path() const {
 
 Dictionary GeminiClient::load_settings() {
     Dictionary settings;
-    
+
     String settings_path = _get_settings_path();
     Ref<FileAccess> f = FileAccess::open(settings_path, FileAccess::READ);
-    
+
     if (f.is_valid()) {
         String json_text = f->get_as_text();
-        
+
         JSON json;
         Error err = json.parse(json_text);
-        
+
         if (err == OK) {
             settings = json.get_data();
-            
+
             if (settings.has("model")) {
                 model = settings["model"];
             }
-            
+
             if (settings.has("temperature")) {
                 temperature = settings["temperature"];
             }
-            
+
             if (settings.has("max_output_tokens")) {
                 max_output_tokens = settings["max_output_tokens"];
             }
-            
+
             if (settings.has("dev_mode")) {
                 dev_mode = settings["dev_mode"];
             }
-            
+
             if (settings.has("api_key")) {
                 api_key = settings["api_key"];
             }
-            
+
             if (settings.has("proxy_url")) {
                 proxy_url = settings["proxy_url"];
             }
@@ -103,10 +103,10 @@ Dictionary GeminiClient::load_settings() {
         settings["max_output_tokens"] = max_output_tokens;
         settings["dev_mode"] = dev_mode;
         settings["proxy_url"] = proxy_url;
-        
+
         save_settings(settings);
     }
-    
+
     return settings;
 }
 
@@ -114,30 +114,30 @@ void GeminiClient::save_settings(const Dictionary &p_settings) {
     if (p_settings.has("model")) {
         model = p_settings["model"];
     }
-    
+
     if (p_settings.has("temperature")) {
         temperature = p_settings["temperature"];
     }
-    
+
     if (p_settings.has("max_output_tokens")) {
         max_output_tokens = p_settings["max_output_tokens"];
     }
-    
+
     if (p_settings.has("dev_mode")) {
         dev_mode = p_settings["dev_mode"];
     }
-    
+
     if (p_settings.has("api_key")) {
         api_key = p_settings["api_key"];
     }
-    
+
     if (p_settings.has("proxy_url")) {
         proxy_url = p_settings["proxy_url"];
     }
-    
+
     String settings_path = _get_settings_path();
     Ref<FileAccess> f = FileAccess::open(settings_path, FileAccess::WRITE);
-    
+
     if (f.is_valid()) {
         Dictionary settings_to_save;
         settings_to_save["model"] = model;
@@ -145,11 +145,11 @@ void GeminiClient::save_settings(const Dictionary &p_settings) {
         settings_to_save["max_output_tokens"] = max_output_tokens;
         settings_to_save["dev_mode"] = dev_mode;
         settings_to_save["proxy_url"] = proxy_url;
-        
+
         if (dev_mode && !api_key.is_empty()) {
             settings_to_save["api_key"] = api_key;
         }
-        
+
         JSON json;
         String json_text = json.stringify(settings_to_save, "    ");
         f->store_string(json_text);
@@ -162,9 +162,9 @@ void GeminiClient::send_request(const String &p_user_input, const String &p_scen
         p_callback.call(response, "API key not set. Please set it in the settings.");
         return;
     }
-    
+
     current_callback = p_callback;
-    
+
     // Prepare the prompt
     String system_prompt = R"(
 You are Vector AI, an AI assistant that helps users modify their Godot scenes based on natural language prompts.
@@ -181,60 +181,45 @@ MODIFICATIONS:
 EXPLANATION:
 [Explanation of why these modifications were made and how they address the user's request]
 )";
-    
+
     String scene_prompt = "Current scene structure:\n" + p_scene_info;
-    
+
     Dictionary request_data;
     String url;
     PackedStringArray headers;
     headers.push_back("Content-Type: application/json");
-    
+
     if (dev_mode) {
         // Direct API call for development/testing
         url = "https://generativelanguage.googleapis.com/v1/models/" + model + ":generateContent?key=" + api_key;
-        
+
         // Prepare the direct API request body
         Array contents;
-        
-        Dictionary system_message;
-        system_message["role"] = "system";
-        Array system_parts;
-        Dictionary system_part;
-        system_part["text"] = system_prompt;
-        system_parts.push_back(system_part);
-        system_message["parts"] = system_parts;
-        contents.push_back(system_message);
-        
-        Dictionary scene_message;
-        scene_message["role"] = "user";
-        Array scene_parts;
-        Dictionary scene_part;
-        scene_part["text"] = scene_prompt;
-        scene_parts.push_back(scene_part);
-        scene_message["parts"] = scene_parts;
-        contents.push_back(scene_message);
-        
+
+        // Combine all prompts into a single user message since system role isn't supported
+        String combined_prompt = system_prompt + "\n\n" + scene_prompt + "\n\n" + p_user_input;
+
         Dictionary user_message;
         user_message["role"] = "user";
         Array user_parts;
         Dictionary user_part;
-        user_part["text"] = p_user_input;
+        user_part["text"] = combined_prompt;
         user_parts.push_back(user_part);
         user_message["parts"] = user_parts;
         contents.push_back(user_message);
-        
+
         Dictionary generation_config;
         generation_config["temperature"] = temperature;
         generation_config["maxOutputTokens"] = max_output_tokens;
         generation_config["topP"] = 0.95;
         generation_config["topK"] = 64;
-        
+
         request_data["contents"] = contents;
         request_data["generationConfig"] = generation_config;
     } else {
         // Proxy server call for production
         url = proxy_url;
-        
+
         request_data["model"] = model;
         request_data["temperature"] = temperature;
         request_data["max_output_tokens"] = max_output_tokens;
@@ -242,12 +227,12 @@ EXPLANATION:
         request_data["scene_info"] = p_scene_info;
         request_data["user_input"] = p_user_input;
     }
-    
+
     JSON json;
     String json_body = json.stringify(request_data);
-    
+
     Error err = http_request->request(url, headers, HTTPClient::METHOD_POST, json_body);
-    
+
     if (err != OK) {
         Dictionary response;
         p_callback.call(response, "HTTP Request Error: " + itos(err));
@@ -258,14 +243,14 @@ void GeminiClient::_on_request_completed(int p_result, int p_code, const PackedS
     if (current_callback.is_null()) {
         return;
     }
-    
+
     if (p_result != HTTPRequest::RESULT_SUCCESS) {
         Dictionary response;
         current_callback.call(response, "HTTP Request Failed: " + itos(p_result));
         current_callback = Callable();
         return;
     }
-    
+
     if (p_code != 200) {
         Dictionary response;
         current_callback.call(response, "HTTP Error: " + itos(p_code));
@@ -273,24 +258,24 @@ void GeminiClient::_on_request_completed(int p_result, int p_code, const PackedS
         current_callback = Callable();
         return;
     }
-    
+
     // Parse the response
     String response_text = String::utf8((const char *)p_body.ptr(), p_body.size());
     JSON json;
     Error err = json.parse(response_text);
-    
+
     if (err != OK) {
         Dictionary response;
         current_callback.call(response, "JSON Parse Error: " + itos(err));
         current_callback = Callable();
         return;
     }
-    
+
     Dictionary response_data = json.get_data();
-    
+
     // Extract the response text
     String ai_response_text;
-    
+
     // Check if this is a direct Gemini API response
     if (response_data.has("candidates") && response_data["candidates"].get_type() == Variant::ARRAY) {
         Array candidates = response_data["candidates"];
@@ -314,22 +299,22 @@ void GeminiClient::_on_request_completed(int p_result, int p_code, const PackedS
     else if (response_data.has("response")) {
         ai_response_text = response_data["response"];
     }
-    
+
     if (ai_response_text.is_empty()) {
         Dictionary response;
         current_callback.call(response, "Empty response from API");
         current_callback = Callable();
         return;
     }
-    
+
     // Parse modifications from the response
     Dictionary modifications = _parse_modifications(ai_response_text);
-    
+
     // Create the response object
     Dictionary response;
     response["text"] = ai_response_text;
     response["modifications"] = modifications;
-    
+
     // Call the callback
     current_callback.call(response, "");
     current_callback = Callable();
@@ -338,35 +323,114 @@ void GeminiClient::_on_request_completed(int p_result, int p_code, const PackedS
 Dictionary GeminiClient::_parse_modifications(const String &p_response_text) {
     Dictionary modifications;
     Array mod_list;
-    
+
     // Look for the MODIFICATIONS section
     int modifications_start = p_response_text.find("MODIFICATIONS:");
     int modifications_end = p_response_text.find("EXPLANATION:");
-    
+
     if (modifications_start != -1 && modifications_end != -1) {
         String modifications_text = p_response_text.substr(modifications_start + 14, modifications_end - modifications_start - 14).strip_edges();
         Vector<String> lines = modifications_text.split("\n");
-        
+
+        String current_node_path = "";
+        String current_property_value = "";
+        bool in_property_block = false;
+
         for (int i = 0; i < lines.size(); i++) {
             String line = lines[i].strip_edges();
-            if (line.is_empty() || line.begins_with("-") || line.begins_with("*")) {
+
+            // Skip empty lines and bullet points
+            if (line.is_empty() || line == "-" || line == "*") {
                 continue;
             }
-            
-            // Parse the modification
-            Vector<String> parts = line.split(":", true, 1);
-            if (parts.size() >= 2) {
-                String node_path = parts[0].strip_edges();
-                String property_value = parts[1].strip_edges();
-                
-                Dictionary mod;
-                mod["node_path"] = node_path;
-                mod["property_value"] = property_value;
-                mod_list.push_back(mod);
+
+            // Check if this is a numbered step (like "1. Create Node:" or "2. Set Property:")
+            bool is_numbered_step = false;
+            if (line.begins_with("1.") || line.begins_with("2.") || line.begins_with("3.")) {
+                is_numbered_step = true;
+                in_property_block = false;
+
+                // If we have a complete modification from before, add it
+                if (!current_node_path.is_empty() && !current_property_value.is_empty()) {
+                    Dictionary mod;
+                    mod["node_path"] = current_node_path;
+                    mod["property_value"] = current_property_value;
+                    mod_list.push_back(mod);
+
+                    // Reset for the next modification
+                    current_node_path = "";
+                    current_property_value = "";
+                }
+            }
+
+            // Check if this is a property line (like "- Path: Main/Triangle")
+            if (line.begins_with("- Path:")) {
+                String path_value = line.substr(7).strip_edges();
+                current_node_path = path_value;
+                continue;
+            }
+
+            // Check if this is a property type line (like "- Type: Polygon2D")
+            if (line.begins_with("- Type:")) {
+                current_property_value = line.substr(2).strip_edges(); // Keep the "Type:" prefix
+                continue;
+            }
+
+            // Check if this is a property name line (like "- Property: polygon")
+            if (line.begins_with("- Property:")) {
+                in_property_block = true;
+                String property_name = line.substr(11).strip_edges();
+                current_property_value = "property: " + property_name;
+                continue;
+            }
+
+            // Check if this is a property value line (like "- Value: PoolVector2Array(...)")
+            if (line.begins_with("- Value:")) {
+                String value = line.substr(8).strip_edges();
+
+                // If we're in a property block, append the value to the current property
+                if (in_property_block && !current_property_value.is_empty()) {
+                    current_property_value += ": " + value;
+
+                    // Add this complete property modification
+                    if (!current_node_path.is_empty()) {
+                        Dictionary mod;
+                        mod["node_path"] = current_node_path;
+                        mod["property_value"] = current_property_value;
+                        mod_list.push_back(mod);
+                    }
+
+                    // Reset for the next property (but keep the node path)
+                    current_property_value = "";
+                    in_property_block = false;
+                }
+                continue;
+            }
+
+            // For lines that don't match any of the above patterns, try the original parsing
+            if (!is_numbered_step && !line.begins_with("-")) {
+                Vector<String> parts = line.split(":", true, 1);
+                if (parts.size() >= 2) {
+                    String node_path = parts[0].strip_edges();
+                    String property_value = parts[1].strip_edges();
+
+                    Dictionary mod;
+                    mod["node_path"] = node_path;
+                    mod["property_value"] = property_value;
+                    mod_list.push_back(mod);
+                }
             }
         }
+
+        // Add the last modification if there's one pending
+        if (!current_node_path.is_empty() && !current_property_value.is_empty()) {
+            Dictionary mod;
+            mod["node_path"] = current_node_path;
+            mod["property_value"] = current_property_value;
+            mod_list.push_back(mod);
+        }
     }
-    
+
     modifications["list"] = mod_list;
     return modifications;
 }

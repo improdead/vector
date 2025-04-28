@@ -13,7 +13,7 @@ var dev_mode_check: CheckBox
 
 # Settings
 var api_key = ""
-var model = "gemini-1.5-pro"
+var model = "gemini-2.5-flash-preview-04-17"
 var temperature = 0.7
 var max_output_tokens = 2048
 var dev_mode = false
@@ -46,9 +46,9 @@ func _ready():
 	
 	# Populate model options
 	model_option.clear()
-	model_option.add_item("gemini-1.5-pro")
-	model_option.add_item("gemini-1.5-flash")
-	model_option.add_item("gemini-1.0-pro")
+	model_option.add_item("gemini-2.5-flash-preview-04-17")
+	model_option.add_item("gemini-2.5-flash-preview-04-17")
+	model_option.add_item("gemini-2.5-flash-preview-04-17")
 	
 	# Select the current model
 	for i in range(model_option.get_item_count()):

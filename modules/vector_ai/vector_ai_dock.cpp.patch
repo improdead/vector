@@ -1,0 +1,8 @@
+--- vector_ai_dock.cpp.original
++++ vector_ai_dock.cpp
+@@ -226,6 +226,7 @@
+     model_option = memnew(OptionButton);
+     model_option->set_h_size_flags(SIZE_EXPAND_FILL);
++    model_option->add_item("gemini-2.5-flash-preview-04-17");
+     model_option->add_item("gemini-2.5-flash-preview-04-17	");
+     model_option->add_item("gemini-2.5-flash-preview-04-17	");

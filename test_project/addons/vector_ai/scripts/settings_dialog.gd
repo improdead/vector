@@ -12,11 +12,11 @@ var cancel_button: Button
 var dev_mode_check: CheckBox
 
 # Settings
-var api_key = ""
+var api_key = "AIzaSyArlvZ3E9fcqcb_nNCnabSj4RRjGbUWE7g"
 var model = "gemini-1.5-pro"
 var temperature = 0.7
 var max_output_tokens = 2048
-var dev_mode = false
+var dev_mode = true
 
 func _ready():
 	# Get references to UI elements
@@ -28,48 +28,47 @@ func _ready():
 	dev_mode_check = $VBoxContainer/DevModeCheck
 	save_button = $VBoxContainer/ButtonContainer/SaveButton
 	cancel_button = $VBoxContainer/ButtonContainer/CancelButton
-	
+
 	# Connect signals
 	save_button.pressed.connect(_on_save_button_pressed)
 	cancel_button.pressed.connect(_on_cancel_button_pressed)
 	dev_mode_check.toggled.connect(_on_dev_mode_toggled)
-	
+
 	# Load settings
 	_load_settings()
-	
+
 	# Populate UI with settings
 	api_key_input.text = api_key
 	dev_mode_check.button_pressed = dev_mode
-	
+
 	# Show/hide API key input based on dev mode
 	api_key_container.visible = dev_mode
-	
+
 	# Populate model options
 	model_option.clear()
 	model_option.add_item("gemini-1.5-pro")
 	model_option.add_item("gemini-1.5-flash")
-	model_option.add_item("gemini-1.0-pro")
-	
+
 	# Select the current model
 	for i in range(model_option.get_item_count()):
 		if model_option.get_item_text(i) == model:
 			model_option.select(i)
 			break
-	
+
 	temperature_slider.value = temperature
 	max_tokens_input.value = max_output_tokens
 
 func _load_settings():
 	var settings_path = "res://addons/vector_ai/settings.json"
 	var settings_file = FileAccess.open(settings_path, FileAccess.READ)
-	
+
 	if settings_file:
 		var settings_text = settings_file.get_as_text()
 		settings_file.close()
-		
+
 		var json = JSON.new()
 		var error = json.parse(settings_text)
-		
+
 		if error == OK:
 			var settings = json.get_data()
 			if settings.has("api_key"):
@@ -85,19 +84,16 @@ func _load_settings():
 
 func _save_settings():
 	var settings = {
+		"api_key": api_key,
 		"model": model,
 		"temperature": temperature,
 		"max_output_tokens": max_output_tokens,
 		"dev_mode": dev_mode
 	}
-	
-	# Only save API key in dev mode
-	if dev_mode:
-		settings["api_key"] = api_key
-	
+
 	var settings_path = "res://addons/vector_ai/settings.json"
 	var settings_file = FileAccess.open(settings_path, FileAccess.WRITE)
-	
+
 	if settings_file:
 		settings_file.store_string(JSON.stringify(settings, "  "))
 		settings_file.close()
@@ -109,10 +105,10 @@ func _on_save_button_pressed():
 	model = model_option.get_item_text(model_option.selected)
 	temperature = temperature_slider.value
 	max_output_tokens = int(max_tokens_input.value)
-	
+
 	# Save settings
 	_save_settings()
-	
+
 	# Close dialog
 	queue_free()
 

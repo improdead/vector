@@ -39,7 +39,7 @@ class GeminiClient : public Node {
 
 private:
     // Gemini API configuration
-    String model = "gemini-1.5-pro";
+    String model = "gemini-2.5-flash-preview-04-17";
     double temperature = 0.7;
     int max_output_tokens = 2048;
     bool dev_mode = false;
