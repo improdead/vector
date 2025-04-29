@@ -1,0 +1,163 @@
+[gd_scene load_steps=9 format=3 uid="uid://bq8j6vxe0h4q8t"]
+
+[ext_resource type="Script" path="res://addons/vektor/scripts/vektor_sidebar.gd" id="1_abcde"]
+[ext_resource type="Theme" path="res://addons/vektor/resources/vektor_theme.tres" id="2_fghij"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.01, 0.01, 0.01, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.1, 0.1, 0.1, 1)
+
+[node name="VectorSidebar" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_fghij")
+script = ExtResource("1_abcde")
+
+[node name="Background" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="MainContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="HeaderPanel" type="PanelContainer" parent="MainContainer"]
+layout_mode = 2
+theme_type_variation = &"HeaderPanel"
+
+[node name="HeaderControls" type="HBoxContainer" parent="MainContainer/HeaderPanel"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="TitleLabel" type="Label" parent="MainContainer/HeaderPanel/HeaderControls"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HeaderLabel"
+text = "VECTOR"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ModelContainer" type="HBoxContainer" parent="MainContainer/HeaderPanel/HeaderControls"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ModelLabel" type="Label" parent="MainContainer/HeaderPanel/HeaderControls/ModelContainer"]
+layout_mode = 2
+text = "Model:"
+vertical_alignment = 1
+
+[node name="ModelSelector" type="OptionButton" parent="MainContainer/HeaderPanel/HeaderControls/ModelContainer"]
+layout_mode = 2
+item_count = 3
+selected = 0
+popup/item_0/text = "GPT-4"
+popup/item_0/id = 0
+popup/item_1/text = "Claude 3"
+popup/item_1/id = 1
+popup/item_2/text = "Gemini"
+popup/item_2/id = 2
+
+[node name="ClearButton" type="Button" parent="MainContainer/HeaderPanel/HeaderControls"]
+layout_mode = 2
+text = "Clear"
+
+[node name="AttachedScenesPanel" type="PanelContainer" parent="MainContainer"]
+layout_mode = 2
+theme_type_variation = &"ContentPanel"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MainContainer/AttachedScenesPanel"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="AttachedScenes" type="HBoxContainer" parent="MainContainer/AttachedScenesPanel/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="ChatPanel" type="PanelContainer" parent="MainContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"ContentPanel"
+
+[node name="ChatHistory" type="RichTextLabel" parent="MainContainer/ChatPanel"]
+layout_mode = 2
+focus_mode = 2
+bbcode_enabled = true
+scroll_following = true
+selection_enabled = true
+
+[node name="ActionBar" type="PanelContainer" parent="MainContainer"]
+visible = false
+layout_mode = 2
+theme_type_variation = &"ActionPanel"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainContainer/ActionBar"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="ApplyButton" type="Button" parent="MainContainer/ActionBar/HBoxContainer"]
+layout_mode = 2
+theme_type_variation = &"ApplyButton"
+text = "Apply Changes"
+
+[node name="DiscardButton" type="Button" parent="MainContainer/ActionBar/HBoxContainer"]
+layout_mode = 2
+theme_type_variation = &"DiscardButton"
+text = "Discard"
+
+[node name="InputArea" type="VBoxContainer" parent="MainContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ToolsContainer" type="HBoxContainer" parent="MainContainer/InputArea"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="AttachButton" type="Button" parent="MainContainer/InputArea/ToolsContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "📎 Attach Scene"
+
+[node name="ModeSelector" type="OptionButton" parent="MainContainer/InputArea/ToolsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+item_count = 2
+selected = 0
+popup/item_0/text = "Ask Mode"
+popup/item_0/id = 0
+popup/item_1/text = "Composer Mode"
+popup/item_1/id = 1
+
+[node name="InputContainer" type="HBoxContainer" parent="MainContainer/InputArea"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="InputField" type="TextEdit" parent="MainContainer/InputArea/InputContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Type your request here..."
+wrap_mode = 1
+scroll_fit_content_height = true
+
+[node name="SendButton" type="Button" parent="MainContainer/InputArea/InputContainer"]
+layout_mode = 2
+text = "Send"
