@@ -26,11 +26,19 @@ func _ready():
 	_load_settings()
 
 func _load_settings():
-	# Get the settings manager
-	settings_manager = get_node("/root/SettingsManager")
+	# Try to find the settings manager in different places
+	# First, try to find it in the parent
+	settings_manager = get_parent().get_node_or_null("SettingsManager")
+
+	# If not found, try to find it in the parent's parent
+	if not settings_manager and get_parent() and get_parent().get_parent():
+		settings_manager = get_parent().get_parent().get_node_or_null("SettingsManager")
+
+	# If still not found, try to find it in the scene root
 	if not settings_manager:
-		# Try to find it in the parent
-		settings_manager = get_parent().get_node("SettingsManager")
+		var scene_root = get_tree().get_root()
+		if scene_root:
+			settings_manager = scene_root.get_node_or_null("SettingsManager")
 
 	if settings_manager:
 		# Load settings from the manager

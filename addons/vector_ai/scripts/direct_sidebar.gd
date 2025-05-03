@@ -55,6 +55,11 @@ func _ready():
 	add_child(direct_game_generator)
 	add_child(direct_json_processor)
 
+	# Set names for the components so they can be found by other scripts
+	direct_file_editor.name = "DirectFileEditor"
+	direct_game_generator.name = "DirectGameGenerator"
+	direct_json_processor.name = "DirectJsonProcessor"
+
 	# Set up references between components
 	direct_game_generator.file_editor = direct_file_editor
 	direct_json_processor.file_editor = direct_file_editor
