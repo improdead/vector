@@ -65,25 +65,42 @@ func is_game_creation_request(user_input):
 
 # Generate a game based on the description
 func generate_game(description):
+	print("Generating game based on description: " + description)
+
 	# Read the current scene content
 	var current_scene = scene_generator.read_current_scene()
+	print("Current scene content length: " + str(current_scene.length()))
 
 	# Create the prompt for game generation
 	var prompt = create_game_prompt(description, current_scene)
+	print("Created prompt for game generation")
 
 	# Send the request to Gemini
+	print("Sending request to Gemini...")
 	gemini_client.send_request(prompt, func(response, error):
+		print("Received response from Gemini")
+
 		if error:
+			print("Error from Gemini: " + error)
 			$VBoxContainer/OutputText.text = "Error: " + error
 		else:
+			print("Response received successfully")
+
 			# Extract code from the response
 			var code = extract_code_from_response(response.text)
 			if code.is_empty():
+				print("No code found in the response")
 				$VBoxContainer/OutputText.text = "No code found in the response."
 			else:
+				print("Code extracted successfully, length: " + str(code.length()))
+
 				# Create the scene with the generated code
+				print("Creating scene with generated code...")
 				var result = scene_generator.create_scene_with_code(code)
+
 				if result.success:
+					print("Scene created successfully!")
+
 					# Extract only the analysis and explanation parts
 					var analysis = extract_analysis(response.text)
 					var explanation = extract_explanation(response.text)
@@ -91,6 +108,7 @@ func generate_game(description):
 					# Show only analysis and explanation, not the code
 					$VBoxContainer/OutputText.text = "[b]Game generated successfully![/b]\n\n[b]ANALYSIS:[/b]\n" + analysis + "\n\n[b]EXPLANATION:[/b]\n" + explanation
 				else:
+					print("Error creating scene: " + result.message)
 					$VBoxContainer/OutputText.text = "Error creating scene: " + result.message
 
 		# Re-enable the generate button
@@ -289,15 +307,22 @@ func extract_explanation(response_text):
 
 # Extract code from the AI response
 func extract_code_from_response(response_text):
+	print("Extracting code from response...")
+
 	var code_start = response_text.find("```gdscript")
 	if code_start == -1:
+		print("ERROR: No ```gdscript marker found in response")
 		return ""
 
 	var code_end = response_text.find("```", code_start + 11)
 	if code_end == -1:
+		print("ERROR: No closing ``` marker found in response")
 		return ""
 
-	return response_text.substr(code_start + 11, code_end - code_start - 11).strip_edges()
+	var code = response_text.substr(code_start + 11, code_end - code_start - 11).strip_edges()
+	print("Extracted code length: " + str(code.length()))
+
+	return code
 
 # Handle settings button press
 func _on_settings_button_pressed():
