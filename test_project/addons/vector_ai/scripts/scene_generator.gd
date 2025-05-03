@@ -18,18 +18,18 @@ func read_current_scene():
 
 # Create a scene with the given code
 func create_scene_with_code(code):
-	# Get the scene path
+	# Get the scene paths - try both resource path and absolute path
 	var scene_path = "res://main.tscn"
-	# In Godot 4.x, use OS.get_executable_path() for the absolute path
-	var project_path = OS.get_executable_path().get_base_dir() + "/main.tscn"
+	var project_dir = ProjectSettings.globalize_path("res://")
+	var abs_scene_path = project_dir + "main.tscn"
 
-	# Debug print
 	print("Creating scene with code")
-	print("Scene path (res://): " + scene_path)
-	print("Project path (absolute): " + project_path)
+	print("Resource path: " + scene_path)
+	print("Absolute path: " + abs_scene_path)
 
 	# Clean up the code to ensure proper formatting
 	code = clean_code(code)
+	print("Code cleaned, length: " + str(code.length()))
 
 	# Create the scene content with embedded script
 	var scene_content = """[gd_scene load_steps=2 format=3]
@@ -43,176 +43,37 @@ script/source = \"\"\"
 [node name="Main" type="Node2D"]
 script = SubResource("GDScript_main")
 """
+	print("Scene content created, length: " + str(scene_content.length()))
 
-	# Debug print
-	print("Scene content length: " + str(scene_content.length()))
-
-	# Try to create the scene file using both paths
+	# Try to create or update the scene file using resource path
 	var result = create_scene(scene_path, scene_content)
 
-	# If that fails, try the absolute path
+	# If that fails, try using the absolute path
 	if not result.success:
-		print("Failed to create scene using res:// path, trying absolute path...")
-		result = create_scene_direct(project_path, scene_content)
+		print("Failed to write using resource path, trying absolute path...")
+		result = create_scene(abs_scene_path, scene_content)
 
-		# If that also fails, try using PowerShell
+		# If that also fails, try using OS.execute to write the file
 		if not result.success:
-			print("Failed to create scene using direct file operations, trying PowerShell...")
-			result = create_scene_powershell(project_path, scene_content)
+			print("Failed to write using absolute path, trying OS.execute...")
+			result = create_scene_with_os_execute(abs_scene_path, scene_content)
 
-	# Debug print
+			# If that also fails, try writing to a different file
+			if not result.success:
+				print("Failed to write using OS.execute, trying alternative file...")
+				result = create_scene(project_dir + "vector_ai_generated.tscn", scene_content)
+
+				# If that also fails, try using OS.execute with the alternative file
+				if not result.success:
+					print("Failed to write alternative file, trying OS.execute with alternative file...")
+					result = create_scene_with_os_execute(project_dir + "vector_ai_generated.tscn", scene_content)
+
 	print("Scene creation result: " + str(result.success) + " - " + result.message)
-
 	return result
 
-# Clean up the code to ensure proper formatting
-func clean_code(code):
-	# Make sure the code starts with 'extends'
-	if not code.strip_edges().begins_with("extends"):
-		code = "extends Node2D\n\n" + code
-
-	# Make sure there's a newline at the end
-	if not code.ends_with("\n"):
-		code += "\n"
-
-	# Check for common formatting issues
-	var lines = code.split("\n")
-	var cleaned_lines = []
-	var in_function = false
-
-	for line in lines:
-		var trimmed = line.strip_edges()
-
-		# Skip empty lines
-		if trimmed.is_empty():
-			cleaned_lines.append(line)
-			continue
-
-		# Check if we're entering a function
-		if trimmed.begins_with("func "):
-			in_function = true
-
-		# Check if we're exiting a function
-		if in_function and trimmed == "":
-			in_function = false
-
-		# Check for variable declarations at class level (not in a function)
-		if not in_function and "=" in trimmed and not trimmed.begins_with("#") and not trimmed.begins_with("var ") and not trimmed.begins_with("const "):
-			# This looks like a variable assignment without var/const at class level
-			line = "var " + line
-
-		cleaned_lines.append(line)
-
-	return "\n".join(cleaned_lines)
-
-# Create or update a scene file using Godot's FileAccess
-func create_scene(path, content):
-	# Debug print
-	print("Creating scene at path: " + path)
-
-	# Check if the directory exists
-	var dir_path = path.get_base_dir()
-	print("Directory path: " + dir_path)
-
-	if not DirAccess.dir_exists_absolute(dir_path):
-		print("Directory does not exist, creating it...")
-		var dir_error = DirAccess.make_dir_recursive_absolute(dir_path)
-		if dir_error != OK:
-			print("Failed to create directory: " + str(dir_error))
-			return {
-				"success": false,
-				"message": "Failed to create directory: " + str(dir_error)
-			}
-
-	# Create or update the file
-	print("Opening file for writing...")
-	var file = FileAccess.open(path, FileAccess.WRITE)
-	if file == null:
-		var error = FileAccess.get_open_error()
-		print("Failed to open file for writing: " + str(error))
-		return {
-			"success": false,
-			"message": "Failed to open file for writing: " + str(error)
-		}
-
-	print("Writing content to file...")
-	file.store_string(content)
-	file.close()
-
-	print("File written successfully!")
-
-	# Verify the file was written
-	if FileAccess.file_exists(path):
-		print("File exists after writing!")
-	else:
-		print("WARNING: File does not exist after writing!")
-
-	return {
-		"success": true,
-		"message": "Scene created successfully at " + path
-	}
-
-# Create or update a scene file using direct file operations
-func create_scene_direct(path, content):
-	# Debug print
-	print("Creating scene directly at path: " + path)
-
-	# Try to write the file directly using FileAccess
-	print("Trying to write file directly...")
-	var file = FileAccess.open(path, FileAccess.WRITE)
-	if file == null:
-		var error = FileAccess.get_open_error()
-		print("Failed to open file for direct writing: " + str(error))
-
-		# Try using OS.execute with cmd
-		print("Trying to write file using OS.execute with cmd...")
-		var temp_path = OS.get_executable_path().get_base_dir() + "/temp_scene.txt"
-		var temp_file = FileAccess.open(temp_path, FileAccess.WRITE)
-		if temp_file != null:
-			temp_file.store_string(content)
-			temp_file.close()
-
-			# Use copy command to copy the temp file to the target path
-			var output = []
-			# In Godot 4.x, the parameter order is: command, arguments, output, read_stderr=false, blocking=true
-			var exit_code = OS.execute("cmd", ["/c", "copy", temp_path, path, "/Y"], output)
-
-			if exit_code != 0:
-				print("Failed to copy file: " + str(output))
-				return {
-					"success": false,
-					"message": "Failed to copy file: " + str(output)
-				}
-
-			print("File copied successfully!")
-			return {
-				"success": true,
-				"message": "Scene created successfully at " + path + " using copy command"
-			}
-		else:
-			var temp_error = FileAccess.get_open_error()
-			print("Failed to create temporary file: " + str(temp_error))
-			return {
-				"success": false,
-				"message": "Failed to create temporary file: " + str(temp_error)
-			}
-	}
-
-	print("Writing content to file directly...")
-	file.store_string(content)
-	file.close()
-
-	print("File written directly!")
-
-	return {
-		"success": true,
-		"message": "Scene created successfully at " + path + " using direct file operations"
-	}
-
-# Create or update a scene file using PowerShell
-func create_scene_powershell(path, content):
-	# Debug print
-	print("Creating scene using PowerShell at path: " + path)
+# Create a scene file using OS.execute
+func create_scene_with_os_execute(path, content):
+	print("Attempting to write file using OS.execute: " + path)
 
 	# Create a temporary file with the content
 	var temp_path = OS.get_executable_path().get_base_dir() + "/temp_scene.txt"
@@ -234,7 +95,6 @@ func create_scene_powershell(path, content):
 	var ps_command = "Copy-Item -Path '" + temp_path + "' -Destination '" + path + "' -Force"
 	print("PowerShell command: " + ps_command)
 
-	# In Godot 4.x, the parameter order is: command, arguments, output, read_stderr=false, blocking=true
 	var exit_code = OS.execute("powershell", ["-Command", ps_command], output)
 
 	print("PowerShell exit code: " + str(exit_code))
@@ -251,4 +111,106 @@ func create_scene_powershell(path, content):
 	return {
 		"success": true,
 		"message": "Scene created successfully at " + path + " using PowerShell"
+	}
+
+# Clean up the code to ensure proper formatting
+func clean_code(code):
+	print("Cleaning code...")
+
+	# Remove any duplicate 'extends' statements
+	var lines = code.split("\n")
+	var cleaned_lines = []
+	var found_extends = false
+
+	for line in lines:
+		var trimmed = line.strip_edges()
+
+		# Check if this is an 'extends' line
+		if trimmed.begins_with("extends"):
+			# If we've already found an 'extends' statement, skip this line
+			if found_extends:
+				print("Skipping duplicate extends statement: " + trimmed)
+				continue
+
+			# Otherwise, mark that we've found one and keep it
+			found_extends = true
+
+		# Add the line to our cleaned lines
+		cleaned_lines.append(line)
+
+	# Rejoin the lines
+	code = "\n".join(cleaned_lines)
+
+	# Make sure the code starts with 'extends'
+	if not code.strip_edges().begins_with("extends"):
+		print("Adding missing extends statement")
+		code = "extends Node2D\n\n" + code
+
+	# Make sure there's a newline at the end
+	if not code.ends_with("\n"):
+		code += "\n"
+
+	print("Code cleaning complete")
+	return code
+
+# Create or update a scene file
+func create_scene(path, content):
+	print("Attempting to write to file: " + path)
+
+	# Check if the directory exists
+	var dir_path = path.get_base_dir()
+	print("Directory path: " + dir_path)
+
+	if not DirAccess.dir_exists_absolute(dir_path):
+		print("Directory does not exist, creating it...")
+		var dir_error = DirAccess.make_dir_recursive_absolute(dir_path)
+		if dir_error != OK:
+			print("Failed to create directory: " + str(dir_error))
+			return {
+				"success": false,
+				"message": "Failed to create directory: " + str(dir_error)
+			}
+
+	# Try to create or update the file
+	print("Opening file for writing...")
+	var file = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		var error = FileAccess.get_open_error()
+		print("Failed to open file for writing: " + str(error))
+		return {
+			"success": false,
+			"message": "Failed to open file for writing: " + str(error)
+		}
+
+	print("Writing content to file...")
+	file.store_string(content)
+	file.close()
+
+	# Verify the file was written
+	if FileAccess.file_exists(path):
+		print("File exists after writing!")
+
+		# Try to read the file back to verify content
+		var verify_file = FileAccess.open(path, FileAccess.READ)
+		if verify_file != null:
+			var verify_content = verify_file.get_as_text()
+			verify_file.close()
+
+			if verify_content.length() > 0:
+				print("File content verified, length: " + str(verify_content.length()))
+			else:
+				print("WARNING: File exists but content is empty!")
+		else:
+			print("WARNING: File exists but cannot be read!")
+	else:
+		print("WARNING: File does not exist after writing!")
+		return {
+			"success": false,
+			"message": "File does not exist after writing!"
+		}
+
+	print("File written successfully!")
+	return {
+		"success": true,
+		"message": "Scene created successfully at " + path
 	}
