@@ -1,7 +1,7 @@
 {
   "api_key": "AIzaSyArlvZ3E9fcqcb_nNCnabSj4RRjGbUWE7g",
   "dev_mode": true,
-  "max_output_tokens": 2048,
+  "max_output_tokens": 5000,
   "model": "gemini-1.5-pro",
   "temperature": 0.7
 }
