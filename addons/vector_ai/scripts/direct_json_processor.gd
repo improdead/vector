@@ -10,10 +10,27 @@ var file_editor
 func _ready():
 	print("Direct JSON Processor initialized")
 
-	# Get reference to the direct file editor
-	file_editor = get_parent().get_node("DirectFileEditor")
+	# Try to find the DirectFileEditor in different places
+	# First, try to find it in the parent
+	file_editor = get_parent().get_node_or_null("DirectFileEditor")
+
+	# If not found, try to find it in the parent's parent
+	if not file_editor and get_parent() and get_parent().get_parent():
+		file_editor = get_parent().get_parent().get_node_or_null("DirectFileEditor")
+
+	# If still not found, try to find it in the scene root
 	if not file_editor:
-		push_error("Vector AI: DirectFileEditor not found!")
+		var scene_root = get_tree().get_root()
+		if scene_root:
+			file_editor = scene_root.find_child("DirectFileEditor", true, false)
+
+	# If still not found, create a new one
+	if not file_editor:
+		push_warning("Vector AI: DirectFileEditor not found, creating a new one")
+		file_editor = Node.new()
+		file_editor.set_script(load("res://addons/vector_ai/scripts/direct_file_editor.gd"))
+		file_editor.name = "DirectFileEditor"
+		add_child(file_editor)
 
 # Process JSON commands from the AI
 func process_json_commands(json_string):
@@ -289,11 +306,29 @@ func _create_game(command):
 	if not _validate_fields(command, ["game_type"], result):
 		return result
 
-	# Get the game generator
-	var game_generator = get_parent().get_node("DirectGameGenerator")
+	# Try to find the DirectGameGenerator in different places
+	var game_generator = get_parent().get_node_or_null("DirectGameGenerator")
+
+	# If not found, try to find it in the parent's parent
+	if not game_generator and get_parent() and get_parent().get_parent():
+		game_generator = get_parent().get_parent().get_node_or_null("DirectGameGenerator")
+
+	# If still not found, try to find it in the scene root
 	if not game_generator:
-		result.error = "DirectGameGenerator not found!"
-		return result
+		var scene_root = get_tree().get_root()
+		if scene_root:
+			game_generator = scene_root.find_child("DirectGameGenerator", true, false)
+
+	# If still not found, create a new one
+	if not game_generator:
+		push_warning("Vector AI: DirectGameGenerator not found, creating a new one")
+		game_generator = Node.new()
+		game_generator.set_script(load("res://addons/vector_ai/scripts/direct_game_generator.gd"))
+		game_generator.name = "DirectGameGenerator"
+		add_child(game_generator)
+
+		# Make sure the game generator has a reference to the file editor
+		game_generator.file_editor = file_editor
 
 	# Create the game based on the type
 	var game_result

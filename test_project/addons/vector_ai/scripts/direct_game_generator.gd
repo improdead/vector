@@ -11,10 +11,27 @@ var file_editor
 func _ready():
 	print("Direct Game Generator initialized")
 
-	# Get reference to the direct file editor
-	file_editor = get_parent().get_node("DirectFileEditor")
+	# Try to find the DirectFileEditor in different places
+	# First, try to find it in the parent
+	file_editor = get_parent().get_node_or_null("DirectFileEditor")
+
+	# If not found, try to find it in the parent's parent
+	if not file_editor and get_parent() and get_parent().get_parent():
+		file_editor = get_parent().get_parent().get_node_or_null("DirectFileEditor")
+
+	# If still not found, try to find it in the scene root
 	if not file_editor:
-		push_error("Vector AI: DirectFileEditor not found!")
+		var scene_root = get_tree().get_root()
+		if scene_root:
+			file_editor = scene_root.find_child("DirectFileEditor", true, false)
+
+	# If still not found, create a new one
+	if not file_editor:
+		push_warning("Vector AI: DirectFileEditor not found, creating a new one")
+		file_editor = Node.new()
+		file_editor.set_script(load("res://addons/vector_ai/scripts/direct_file_editor.gd"))
+		file_editor.name = "DirectFileEditor"
+		add_child(file_editor)
 
 # Create a simple maze game
 func create_maze_game(path_prefix = "res://"):
