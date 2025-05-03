@@ -3,7 +3,7 @@ extends Node
 
 # Gemini API configuration
 var api_key = ""
-var model = "gemini-2.5-flash-preview-04-17"  # Latest Gemini 2.5 Flash Preview model as of now
+var model = "gemini-2.5-flash-preview-04-17"  # Using Gemini 2.5 Flash Preview model (not 1.5 Pro)
 var temperature = 0.7
 var max_output_tokens = 2048
 

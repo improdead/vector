@@ -13,7 +13,7 @@ var dev_mode_check: CheckBox
 
 # Settings
 var api_key = ""
-var model = "gemini-2.5-flash-preview-04-17"
+var model = "gemini-2.5-flash-preview-04-17"  # Using Gemini 2.5 Flash Preview model (not 1.5 Pro)
 var temperature = 0.7
 var max_output_tokens = 2048
 var dev_mode = false
@@ -46,9 +46,10 @@ func _ready():
 
 	# Populate model options
 	model_option.clear()
-	model_option.add_item("gemini-2.5-flash-preview-04-17")
+	model_option.add_item("gemini-2.5-flash-preview-04-17")  # Prioritize Gemini 2.5 Flash
 	model_option.add_item("gemini-2.5-pro-preview-03-25")
 	model_option.add_item("gemini-2.0-flash")
+	# Add Gemini 1.5 Pro at the end (least preferred)
 	model_option.add_item("gemini-1.5-pro")
 
 	# Select the current model
