@@ -650,31 +650,15 @@ func create_game_from_description(description, path_prefix = "res://"):
 	# Analyze the description to determine what kind of game to create
 	description = description.to_lower()
 
-	# Generate a unique file name to avoid overwriting existing files
-	var base_path = "res://"
-	var game_name = "game"
-
-	# Extract a name from the description if possible
-	if "maze" in description or "collect" in description:
-		game_name = "maze_game"
-	elif "platform" in description or "jump" in description or "parkour" in description:
-		game_name = "platformer_game"
+	# Always use main.tscn as the default path
+	# This is the standard entry point for Godot games
+	var base_path = "res://main"
 
 	# Check if main.tscn already exists
 	if FileAccess.file_exists("res://main.tscn"):
-		# Find a unique name
-		var counter = 1
-		var new_path = base_path + game_name + str(counter) + ".tscn"
-		while FileAccess.file_exists(new_path):
-			counter += 1
-			new_path = base_path + game_name + str(counter) + ".tscn"
-
-		# Use the unique path
-		base_path = base_path + game_name + str(counter)
-		print("Creating game at: " + base_path + ".tscn (to avoid overwriting existing main.tscn)")
-	else:
-		# Use the default path
-		base_path = "res://main"
+		print("Note: Overwriting existing main.tscn file.")
+		print("The existing main.tscn will be replaced with the new game.")
+		print("If you want to keep your existing main.tscn, please rename it first.")
 
 	# Create the game based on the description
 	if "maze" in description or "collect" in description:
