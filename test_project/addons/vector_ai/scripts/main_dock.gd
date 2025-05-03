@@ -10,10 +10,12 @@ var scene_generator
 
 func _ready():
 	# Initialize components
-	gemini_client = preload("res://addons/vector_ai/scripts/gemini_client.gd").new()
+	var gemini_client_script = load("res://addons/vector_ai/scripts/gemini_client.gd")
+	gemini_client = gemini_client_script.new()
 	add_child(gemini_client)
 
-	scene_generator = preload("res://addons/vector_ai/scripts/scene_generator.gd").new()
+	var scene_generator_script = load("res://addons/vector_ai/scripts/scene_generator.gd")
+	scene_generator = scene_generator_script.new()
 	add_child(scene_generator)
 
 	# Note: Signals are already connected in the scene file
