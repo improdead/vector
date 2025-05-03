@@ -10,7 +10,7 @@ var file_editor
 
 func _ready():
 	print("Direct Game Generator initialized")
-	
+
 	# Get reference to the direct file editor
 	file_editor = get_parent().get_node("DirectFileEditor")
 	if not file_editor:
@@ -20,7 +20,7 @@ func _ready():
 func create_maze_game(path_prefix = "res://"):
 	var main_scene_path = path_prefix + "main.tscn"
 	var main_script_path = path_prefix + "main.gd"
-	
+
 	# Create the main script
 	var script_content = """extends Node2D
 
@@ -37,7 +37,7 @@ func _ready():
 func collect_coin():
 	score += 1
 	$UI/ScoreLabel.text = "Score: " + str(score) + "/" + str(total_coins)
-	
+
 	if score >= total_coins:
 		$UI/WinLabel.visible = true
 """
@@ -53,18 +53,18 @@ const SPEED = 300.0
 func _physics_process(delta):
 	# Get input direction
 	var direction = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
-	
+
 	# Set velocity
 	velocity = direction * SPEED
-	
+
 	# Move and slide
 	move_and_slide()
-	
+
 	# Check for coin collisions
 	for i in get_slide_collision_count():
 		var collision = get_slide_collision(i)
 		var collider = collision.get_collider()
-		
+
 		if collider.is_in_group("coins"):
 			collider.queue_free()
 			get_parent().collect_coin()
@@ -310,28 +310,28 @@ vertical_alignment = 1
 			"success": false,
 			"message": "Failed to create main script: " + script_result.message
 		}
-	
+
 	var player_script_result = file_editor.create_script(player_script_path, player_script_content)
 	if not player_script_result.success:
 		return {
 			"success": false,
 			"message": "Failed to create player script: " + player_script_result.message
 		}
-	
+
 	var coin_script_result = file_editor.create_script(coin_script_path, coin_script_content)
 	if not coin_script_result.success:
 		return {
 			"success": false,
 			"message": "Failed to create coin script: " + coin_script_result.message
 		}
-	
+
 	var scene_result = file_editor.create_scene(main_scene_path, scene_content)
 	if not scene_result.success:
 		return {
 			"success": false,
 			"message": "Failed to create main scene: " + scene_result.message
 		}
-	
+
 	return {
 		"success": true,
 		"message": "Maze game created successfully!",
@@ -342,7 +342,7 @@ vertical_alignment = 1
 func create_platformer_game(path_prefix = "res://"):
 	var main_scene_path = path_prefix + "main.tscn"
 	var main_script_path = path_prefix + "main.gd"
-	
+
 	# Create the main script
 	var script_content = """extends Node2D
 
@@ -359,7 +359,7 @@ func _ready():
 func collect_coin():
 	score += 1
 	$UI/ScoreLabel.text = "Score: " + str(score) + "/" + str(total_coins)
-	
+
 	if score >= total_coins:
 		$UI/WinLabel.visible = true
 """
@@ -393,12 +393,12 @@ func _physics_process(delta):
 		velocity.x = move_toward(velocity.x, 0, SPEED)
 
 	move_and_slide()
-	
+
 	# Check for coin collisions
 	for i in get_slide_collision_count():
 		var collision = get_slide_collision(i)
 		var collider = collision.get_collider()
-		
+
 		if collider.is_in_group("coins"):
 			collider.queue_free()
 			get_parent().collect_coin()
@@ -617,28 +617,28 @@ vertical_alignment = 1
 			"success": false,
 			"message": "Failed to create main script: " + script_result.message
 		}
-	
+
 	var player_script_result = file_editor.create_script(player_script_path, player_script_content)
 	if not player_script_result.success:
 		return {
 			"success": false,
 			"message": "Failed to create player script: " + player_script_result.message
 		}
-	
+
 	var coin_script_result = file_editor.create_script(coin_script_path, coin_script_content)
 	if not coin_script_result.success:
 		return {
 			"success": false,
 			"message": "Failed to create coin script: " + coin_script_result.message
 		}
-	
+
 	var scene_result = file_editor.create_scene(main_scene_path, scene_content)
 	if not scene_result.success:
 		return {
 			"success": false,
 			"message": "Failed to create main scene: " + scene_result.message
 		}
-	
+
 	return {
 		"success": true,
 		"message": "Platformer game created successfully!",
@@ -649,11 +649,38 @@ vertical_alignment = 1
 func create_game_from_description(description, path_prefix = "res://"):
 	# Analyze the description to determine what kind of game to create
 	description = description.to_lower()
-	
+
+	# Generate a unique file name to avoid overwriting existing files
+	var base_path = "res://"
+	var game_name = "game"
+
+	# Extract a name from the description if possible
 	if "maze" in description or "collect" in description:
-		return create_maze_game(path_prefix)
+		game_name = "maze_game"
 	elif "platform" in description or "jump" in description or "parkour" in description:
-		return create_platformer_game(path_prefix)
+		game_name = "platformer_game"
+
+	# Check if main.tscn already exists
+	if FileAccess.file_exists("res://main.tscn"):
+		# Find a unique name
+		var counter = 1
+		var new_path = base_path + game_name + str(counter) + ".tscn"
+		while FileAccess.file_exists(new_path):
+			counter += 1
+			new_path = base_path + game_name + str(counter) + ".tscn"
+
+		# Use the unique path
+		base_path = base_path + game_name + str(counter)
+		print("Creating game at: " + base_path + ".tscn (to avoid overwriting existing main.tscn)")
+	else:
+		# Use the default path
+		base_path = "res://main"
+
+	# Create the game based on the description
+	if "maze" in description or "collect" in description:
+		return create_maze_game(base_path)
+	elif "platform" in description or "jump" in description or "parkour" in description:
+		return create_platformer_game(base_path)
 	else:
 		# Default to maze game
-		return create_maze_game(path_prefix)
+		return create_maze_game(base_path)
