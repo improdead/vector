@@ -20,6 +20,7 @@ func read_current_scene():
 func create_scene_with_code(code):
 	# Get the scene path
 	var scene_path = "res://main.tscn"
+	# In Godot 4.x, use OS.get_executable_path() for the absolute path
 	var project_path = OS.get_executable_path().get_base_dir() + "/main.tscn"
 
 	# Debug print
@@ -156,24 +157,24 @@ func create_scene_direct(path, content):
 	# Debug print
 	print("Creating scene directly at path: " + path)
 
-	# Try to write the file directly
-	var file = File.new()
-	var error = file.open(path, File.WRITE)
-
-	if error != OK:
+	# Try to write the file directly using FileAccess
+	print("Trying to write file directly...")
+	var file = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		var error = FileAccess.get_open_error()
 		print("Failed to open file for direct writing: " + str(error))
 
-		# Try another approach with OS.execute
-		print("Trying to write file using OS.execute...")
+		# Try using OS.execute with cmd
+		print("Trying to write file using OS.execute with cmd...")
 		var temp_path = OS.get_executable_path().get_base_dir() + "/temp_scene.txt"
-		var temp_file = File.new()
-		if temp_file.open(temp_path, File.WRITE) == OK:
+		var temp_file = FileAccess.open(temp_path, FileAccess.WRITE)
+		if temp_file != null:
 			temp_file.store_string(content)
 			temp_file.close()
 
 			# Use copy command to copy the temp file to the target path
 			var output = []
-			var exit_code = OS.execute("cmd", ["/c", "copy", temp_path, path, "/Y"], true, output)
+			var exit_code = OS.execute("cmd", ["/c", "copy", temp_path, path, "/Y"], output, true)
 
 			if exit_code != 0:
 				print("Failed to copy file: " + str(output))
@@ -188,9 +189,11 @@ func create_scene_direct(path, content):
 				"message": "Scene created successfully at " + path + " using copy command"
 			}
 		else:
+			var temp_error = FileAccess.get_open_error()
+			print("Failed to create temporary file: " + str(temp_error))
 			return {
 				"success": false,
-				"message": "Failed to create temporary file"
+				"message": "Failed to create temporary file: " + str(temp_error)
 			}
 	}
 
@@ -230,7 +233,8 @@ func create_scene_powershell(path, content):
 	var ps_command = "Copy-Item -Path '" + temp_path + "' -Destination '" + path + "' -Force"
 	print("PowerShell command: " + ps_command)
 
-	var exit_code = OS.execute("powershell", ["-Command", ps_command], true, output)
+	# In Godot 4.x, OS.execute still works the same way
+	var exit_code = OS.execute("powershell", ["-Command", ps_command], output, true)
 
 	print("PowerShell exit code: " + str(exit_code))
 	print("PowerShell output: " + str(output))
