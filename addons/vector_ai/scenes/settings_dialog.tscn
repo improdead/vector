@@ -89,6 +89,10 @@ layout_mode = 2
 layout_mode = 2
 alignment = 1
 
+[node name="ResetButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+layout_mode = 2
+text = "Reset to Default"
+
 [node name="SaveButton" type="Button" parent="VBoxContainer/ButtonContainer"]
 layout_mode = 2
 text = "Save"

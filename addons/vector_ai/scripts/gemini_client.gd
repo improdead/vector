@@ -7,6 +7,9 @@ var model = "gemini-2.5-flash-preview-04-17"  # Using Gemini 2.5 Flash Preview m
 var temperature = 0.7
 var max_output_tokens = 2048
 
+# Reference to settings manager
+var settings_manager
+
 # HTTP request
 var http_request
 
@@ -23,6 +26,36 @@ func _ready():
 	_load_settings()
 
 func _load_settings():
+	# Get the settings manager
+	settings_manager = get_node("/root/SettingsManager")
+	if not settings_manager:
+		# Try to find it in the parent
+		settings_manager = get_parent().get_node("SettingsManager")
+
+	if settings_manager:
+		# Load settings from the manager
+		var settings = settings_manager.settings
+
+		# Apply settings
+		if settings.has("api_key"):
+			api_key = settings.api_key
+		if settings.has("model"):
+			model = settings.model
+			print("Gemini client loaded model: " + model)
+		if settings.has("temperature"):
+			temperature = settings.temperature
+		if settings.has("max_output_tokens"):
+			max_output_tokens = settings.max_output_tokens
+
+		# Connect to settings changed signal
+		if not settings_manager.settings_changed.is_connected(_on_settings_changed):
+			settings_manager.settings_changed.connect(_on_settings_changed)
+	else:
+		# Fall back to direct file loading
+		_load_settings_from_file()
+
+# Fallback method for loading settings directly from file
+func _load_settings_from_file():
 	var settings_path = "res://addons/vector_ai/settings.json"
 	var settings_file = FileAccess.open(settings_path, FileAccess.READ)
 
@@ -39,15 +72,47 @@ func _load_settings():
 				api_key = settings.api_key
 			if settings.has("model"):
 				model = settings.model
+				print("Gemini client loaded model from file: " + model)
 			if settings.has("temperature"):
 				temperature = settings.temperature
 			if settings.has("max_output_tokens"):
 				max_output_tokens = settings.max_output_tokens
 	else:
 		# Create default settings file
-		_save_settings()
+		_save_settings_to_file()
+
+# Handle settings changed event
+func _on_settings_changed():
+	if settings_manager:
+		# Reload settings
+		var settings = settings_manager.settings
+
+		# Apply settings
+		if settings.has("api_key"):
+			api_key = settings.api_key
+		if settings.has("model"):
+			model = settings.model
+			print("Gemini client updated model: " + model)
+		if settings.has("temperature"):
+			temperature = settings.temperature
+		if settings.has("max_output_tokens"):
+			max_output_tokens = settings.max_output_tokens
 
 func _save_settings():
+	if settings_manager:
+		# Save settings using the manager
+		settings_manager.set_setting("api_key", api_key)
+		settings_manager.set_setting("model", model)
+		settings_manager.set_setting("temperature", temperature)
+		settings_manager.set_setting("max_output_tokens", max_output_tokens)
+
+		print("Gemini client saved settings via manager. Model: " + model)
+	else:
+		# Fall back to direct file saving
+		_save_settings_to_file()
+
+# Fallback method for saving settings directly to file
+func _save_settings_to_file():
 	var settings = {
 		"api_key": api_key,
 		"model": model,
@@ -61,6 +126,8 @@ func _save_settings():
 	if settings_file:
 		settings_file.store_string(JSON.stringify(settings, "  "))
 		settings_file.close()
+
+		print("Gemini client saved settings to file. Model: " + model)
 
 func send_request(user_input, scene_info, callback, prompt_type = "direct_scene_edit"):
 	if api_key.is_empty():
@@ -176,6 +243,9 @@ func send_request(user_input, scene_info, callback, prompt_type = "direct_scene_
 
 	# Prepare the request URL
 	var url = "https://generativelanguage.googleapis.com/v1/models/" + model + ":generateContent?key=" + api_key
+
+	# Log the model being used
+	print("Sending request using model: " + model)
 
 	# Send the request
 	var headers = ["Content-Type: application/json"]
