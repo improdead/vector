@@ -109,6 +109,15 @@ func generate_game(description):
 
 					# Show only analysis and explanation, not the code
 					$VBoxContainer/OutputText.text = "[b]Game generated successfully![/b]\n\n[b]ANALYSIS:[/b]\n" + analysis + "\n\n[b]EXPLANATION:[/b]\n" + explanation
+
+					# Notify the user to reload the scene
+					$VBoxContainer/OutputText.text += "\n\n[b]NOTE:[/b] The scene file has been updated. If you have it open in the editor, please close and reopen it, or press F5 to reload it."
+
+					# Try to reload the scene if the plugin has access to the editor interface
+					if plugin and plugin.get_editor_interface():
+						print("Attempting to reload the current scene...")
+						# This will only work if the scene is already open in the editor
+						plugin.get_editor_interface().reload_scene_from_path("res://main.tscn")
 				else:
 					print("Error creating scene: " + result.message)
 					$VBoxContainer/OutputText.text = "Error creating scene: " + result.message
@@ -144,6 +153,15 @@ func generate_code(description):
 
 					# Show only analysis and explanation, not the code
 					$VBoxContainer/OutputText.text = "[b]Code generated successfully![/b]\n\n[b]ANALYSIS:[/b]\n" + analysis + "\n\n[b]EXPLANATION:[/b]\n" + explanation
+
+					# Notify the user to reload the scene
+					$VBoxContainer/OutputText.text += "\n\n[b]NOTE:[/b] The scene file has been updated. If you have it open in the editor, please close and reopen it, or press F5 to reload it."
+
+					# Try to reload the scene if the plugin has access to the editor interface
+					if plugin and plugin.get_editor_interface():
+						print("Attempting to reload the current scene...")
+						# This will only work if the scene is already open in the editor
+						plugin.get_editor_interface().reload_scene_from_path("res://main.tscn")
 				else:
 					$VBoxContainer/OutputText.text = "Error creating scene: " + result.message
 
