@@ -174,7 +174,8 @@ func create_scene_direct(path, content):
 
 			# Use copy command to copy the temp file to the target path
 			var output = []
-			var exit_code = OS.execute("cmd", ["/c", "copy", temp_path, path, "/Y"], output, true)
+			# In Godot 4.x, the parameter order is: command, arguments, output, read_stderr=false, blocking=true
+			var exit_code = OS.execute("cmd", ["/c", "copy", temp_path, path, "/Y"], output)
 
 			if exit_code != 0:
 				print("Failed to copy file: " + str(output))
@@ -233,8 +234,8 @@ func create_scene_powershell(path, content):
 	var ps_command = "Copy-Item -Path '" + temp_path + "' -Destination '" + path + "' -Force"
 	print("PowerShell command: " + ps_command)
 
-	# In Godot 4.x, OS.execute still works the same way
-	var exit_code = OS.execute("powershell", ["-Command", ps_command], output, true)
+	# In Godot 4.x, the parameter order is: command, arguments, output, read_stderr=false, blocking=true
+	var exit_code = OS.execute("powershell", ["-Command", ps_command], output)
 
 	print("PowerShell exit code: " + str(exit_code))
 	print("PowerShell output: " + str(output))
