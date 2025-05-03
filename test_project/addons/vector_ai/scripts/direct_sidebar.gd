@@ -36,15 +36,18 @@ func _ready():
 	editor_interface = Engine.get_singleton("EditorInterface")
 
 	# Initialize components
-	var GeminiClient = load("res://addons/vector_ai/scripts/gemini_client.gd")
-	var DirectFileEditor = load("res://addons/vector_ai/scripts/direct_file_editor.gd")
-	var DirectGameGenerator = load("res://addons/vector_ai/scripts/direct_game_generator.gd")
-	var DirectJsonProcessor = load("res://addons/vector_ai/scripts/direct_json_processor.gd")
+	# We need to use a different approach to create script instances
+	gemini_client = Node.new()
+	gemini_client.set_script(load("res://addons/vector_ai/scripts/gemini_client.gd"))
 
-	gemini_client = GeminiClient.new()
-	direct_file_editor = DirectFileEditor.new()
-	direct_game_generator = DirectGameGenerator.new()
-	direct_json_processor = DirectJsonProcessor.new()
+	direct_file_editor = Node.new()
+	direct_file_editor.set_script(load("res://addons/vector_ai/scripts/direct_file_editor.gd"))
+
+	direct_game_generator = Node.new()
+	direct_game_generator.set_script(load("res://addons/vector_ai/scripts/direct_game_generator.gd"))
+
+	direct_json_processor = Node.new()
+	direct_json_processor.set_script(load("res://addons/vector_ai/scripts/direct_json_processor.gd"))
 
 	# Add components as children
 	add_child(gemini_client)

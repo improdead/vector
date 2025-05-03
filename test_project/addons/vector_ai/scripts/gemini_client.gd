@@ -209,7 +209,7 @@ func send_request(user_input, scene_info, callback_func, prompt_type = "direct_s
 					callback_func.call(null, "Error creating game: " + result.error)
 				return
 
-	current_callback = callback
+	current_callback = callback_func
 
 	# Prepare the prompt based on the prompt type
 	var system_prompt = _get_system_prompt(prompt_type)
@@ -265,9 +265,9 @@ func _create_custom_game_prompt(description, game_type):
 	return "Create a " + game_type + " game based on this description: " + description
 
 # Process the custom game creation response
-func _process_custom_game_creation(response, callback, game_request):
+func _process_custom_game_creation(response, callback_func, game_request):
 	if not response or not response.has("text"):
-		callback.call(null, "Invalid response from API")
+		callback_func.call(null, "Invalid response from API")
 		return
 
 	var response_text = response.text
@@ -280,12 +280,12 @@ func _process_custom_game_creation(response, callback, game_request):
 		if json_processor:
 			var result = json_processor.process_json_commands(json_commands)
 			if result.success:
-				callback.call({
+				callback_func.call({
 					"text": "I've created a custom " + game_request.game_type + " game for you. You can now modify it using Vector AI.",
 					"mode": "direct_scene_edit"
 				}, null)
 			else:
-				callback.call(null, "Error creating custom game: " + result.error)
+				callback_func.call(null, "Error creating custom game: " + result.error)
 			return
 
 	# If no JSON commands, try to extract code blocks
@@ -297,16 +297,16 @@ func _process_custom_game_creation(response, callback, game_request):
 			var main_script_path = "res://main.gd"
 			var result = code_generator.generate_script(main_script_path, code_blocks[0])
 			if result.success:
-				callback.call({
+				callback_func.call({
 					"text": "I've created a custom " + game_request.game_type + " game for you. The main script has been saved to " + main_script_path + ". You can now modify it using Vector AI.",
 					"mode": "code_generation"
 				}, null)
 			else:
-				callback.call(null, "Error creating custom game script: " + result.error)
+				callback_func.call(null, "Error creating custom game script: " + result.error)
 			return
 
 	# If no code blocks or JSON commands, just return the response
-	callback.call({
+	callback_func.call({
 		"text": response_text,
 		"mode": "direct_scene_edit"
 	}, null)
