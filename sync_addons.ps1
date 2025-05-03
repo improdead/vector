@@ -1,7 +1,6 @@
-# PowerShell script to sync the main addons directory to the test_project/addons directory
+# PowerShell script to update settings in the test_project/addons directory
 
-# Define source and destination paths
-$sourceDir = "addons/vector_ai"
+# Define destination path
 $destDir = "test_project/addons/vector_ai"
 
 # Create destination directory if it doesn't exist
@@ -29,10 +28,6 @@ foreach ($file in $oldFiles) {
         Write-Host "Removed: $file"
     }
 }
-
-# Copy all files from source to destination
-Write-Host "Syncing addons from $sourceDir to $destDir..."
-Copy-Item -Path "$sourceDir/*" -Destination $destDir -Recurse -Force
 
 # Update settings.json to use Gemini 2.5 Flash
 $settingsPath = "$destDir/settings.json"
