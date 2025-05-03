@@ -1,7 +1,7 @@
 @tool
 extends EditorPlugin
 
-const VectorAISidebar = preload("res://addons/vector_ai/scenes/sidebar.tscn")
+const DirectSidebar = preload("res://addons/vector_ai/scenes/direct_sidebar.tscn")
 const SettingsManager = preload("res://addons/vector_ai/scripts/settings_manager.gd")
 
 var sidebar_instance
@@ -17,7 +17,7 @@ func _enter_tree():
 	settings_manager.force_gemini_25_flash()
 
 	# Initialize the sidebar
-	sidebar_instance = VectorAISidebar.instantiate()
+	sidebar_instance = DirectSidebar.instantiate()
 
 	# Add the settings manager to the sidebar
 	sidebar_instance.add_child(settings_manager.duplicate())
