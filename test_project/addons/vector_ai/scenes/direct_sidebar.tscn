@@ -1,15 +1,15 @@
-[gd_scene load_steps=2 format=3 uid="uid://c8j6vxe0h4q8t"]
+[gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://addons/vector_ai/scripts/sidebar.gd" id="1_yjnkr"]
+[ext_resource type="Script" path="res://addons/vector_ai/scripts/direct_sidebar.gd" id="1_direct_sidebar"]
 
-[node name="VectorAISidebar" type="Control"]
+[node name="DirectSidebar" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_yjnkr")
+script = ExtResource("1_direct_sidebar")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -22,7 +22,7 @@ grow_vertical = 2
 [node name="TopBar" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 
-[node name="TitleLabel" type="Label" parent="VBoxContainer/TopBar"]
+[node name="Title" type="Label" parent="VBoxContainer/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Vector AI"
@@ -30,13 +30,11 @@ vertical_alignment = 1
 
 [node name="SettingsButton" type="Button" parent="VBoxContainer/TopBar"]
 layout_mode = 2
-tooltip_text = "Settings"
-text = "⚙"
+text = "Settings"
 
 [node name="ClearButton" type="Button" parent="VBoxContainer/TopBar"]
 layout_mode = 2
-tooltip_text = "Clear Chat"
-text = "🗑"
+text = "Clear"
 
 [node name="ChatHistory" type="RichTextLabel" parent="VBoxContainer"]
 layout_mode = 2
@@ -51,7 +49,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-placeholder_text = "Type your request here..."
+placeholder_text = "Type your message here..."
 wrap_mode = 1
 scroll_fit_content_height = true
 
