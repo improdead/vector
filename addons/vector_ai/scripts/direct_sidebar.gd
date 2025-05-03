@@ -36,17 +36,22 @@ func _ready():
 	editor_interface = Engine.get_singleton("EditorInterface")
 
 	# Initialize components
-	gemini_client = load("res://addons/vector_ai/scripts/gemini_client.gd").new()
-	direct_file_editor = load("res://addons/vector_ai/scripts/direct_file_editor.gd").new()
-	direct_game_generator = load("res://addons/vector_ai/scripts/direct_game_generator.gd").new()
-	direct_json_processor = load("res://addons/vector_ai/scripts/direct_json_processor.gd").new()
+	var GeminiClient = load("res://addons/vector_ai/scripts/gemini_client.gd")
+	var DirectFileEditor = load("res://addons/vector_ai/scripts/direct_file_editor.gd")
+	var DirectGameGenerator = load("res://addons/vector_ai/scripts/direct_game_generator.gd")
+	var DirectJsonProcessor = load("res://addons/vector_ai/scripts/direct_json_processor.gd")
+
+	gemini_client = GeminiClient.new()
+	direct_file_editor = DirectFileEditor.new()
+	direct_game_generator = DirectGameGenerator.new()
+	direct_json_processor = DirectJsonProcessor.new()
 
 	# Add components as children
 	add_child(gemini_client)
 	add_child(direct_file_editor)
 	add_child(direct_game_generator)
 	add_child(direct_json_processor)
-	
+
 	# Set up references between components
 	direct_game_generator.file_editor = direct_file_editor
 	direct_json_processor.file_editor = direct_file_editor
@@ -110,25 +115,25 @@ func _on_gemini_response(response, error):
 
 	# Process the response
 	var ai_response = response.candidates[0].content.parts[0].text
-	
+
 	# Check if the response contains JSON commands
 	if ai_response.find("```json") != -1:
 		var json_start = ai_response.find("```json") + 7
 		var json_end = ai_response.find("```", json_start)
-		
+
 		if json_end != -1:
 			var json_string = ai_response.substr(json_start, json_end - json_start).strip_edges()
-			
+
 			# Extract the JSON commands
 			_add_ai_message(ai_response.replace("```json\n" + json_string + "\n```", ""))
-			
+
 			# Process the JSON commands
 			_process_json_commands(json_string)
 			return
-	
+
 	# Add AI response to chat history
 	_add_ai_message(ai_response)
-	
+
 	# Check if the response contains a scene or script creation request
 	if _contains_file_creation(ai_response):
 		_handle_file_creation(ai_response)
@@ -143,21 +148,21 @@ func _handle_file_creation(response):
 	if response.find("```gdscript") != -1:
 		var code_start = response.find("```gdscript") + 11
 		var code_end = response.find("```", code_start)
-		
+
 		if code_end != -1:
 			var code = response.substr(code_start, code_end - code_start).strip_edges()
-			
+
 			# Ask the user if they want to create a script with this code
 			_add_system_message("I've generated some GDScript code. Would you like me to create a script file with this code? Reply with /edit_script [path] to create the file.")
-	
+
 	# Check for scene content
 	if response.find("```tscn") != -1:
 		var scene_start = response.find("```tscn") + 7
 		var scene_end = response.find("```", scene_start)
-		
+
 		if scene_end != -1:
 			var scene_content = response.substr(scene_start, scene_end - scene_start).strip_edges()
-			
+
 			# Ask the user if they want to create a scene with this content
 			_add_system_message("I've generated a scene file. Would you like me to create a scene with this content? Reply with /edit_scene [path] to create the file.")
 
@@ -165,9 +170,9 @@ func _handle_file_creation(response):
 func _is_game_creation_request(request):
 	request = request.to_lower()
 	return (
-		request.begins_with("create") or 
-		request.begins_with("make") or 
-		request.begins_with("build") or 
+		request.begins_with("create") or
+		request.begins_with("make") or
+		request.begins_with("build") or
 		request.begins_with("generate")
 	) and (
 		request.find("game") != -1 or
@@ -177,12 +182,12 @@ func _is_game_creation_request(request):
 # Get context information based on the user input
 func _get_context_info(user_input):
 	var context_info = ""
-	
+
 	# Get information about the current scene
 	var current_scene = editor_interface.get_edited_scene_root()
 	if current_scene:
 		context_info += "Current scene: " + current_scene.scene_file_path + "\n"
-	
+
 	# Get information about the current script
 	var editor = editor_interface.get_script_editor()
 	var current_script = editor.get_current_script()
@@ -193,7 +198,7 @@ func _get_context_info(user_input):
 			context_info += "Current script: " + script_path + "\n\n"
 			context_info += file.get_as_text()
 			file.close()
-	
+
 	return context_info
 
 func _on_input_field_gui_input(event):
@@ -249,12 +254,12 @@ JSON Commands:
 
 func _create_game(game_type):
 	_add_system_message("Creating " + game_type + " game...")
-	
+
 	var result = direct_game_generator.create_game_from_description(game_type)
-	
+
 	if result.success:
 		_add_system_message("Successfully created " + game_type + " game!")
-		
+
 		# Open the main scene
 		if result.has("main_scene_path"):
 			editor_interface.open_scene_from_path(result.main_scene_path)
@@ -264,12 +269,12 @@ func _create_game(game_type):
 
 func _create_game_from_description(description):
 	_add_system_message("Creating game based on your description...")
-	
+
 	var result = direct_game_generator.create_game_from_description(description)
-	
+
 	if result.success:
 		_add_system_message("Successfully created game based on your description!")
-		
+
 		# Open the main scene
 		if result.has("main_scene_path"):
 			editor_interface.open_scene_from_path(result.main_scene_path)
@@ -279,12 +284,12 @@ func _create_game_from_description(description):
 
 func _process_json_commands(json_string):
 	_add_system_message("Processing JSON commands...")
-	
+
 	var result = direct_json_processor.process_json_commands(json_string)
-	
+
 	if result.success:
 		_add_system_message("Successfully processed JSON commands.")
-		
+
 		# If there are results, show them
 		if result.has("results"):
 			for command_result in result.results:
@@ -297,19 +302,19 @@ func _edit_scene(scene_path):
 	# Check if the scene path is valid
 	if not scene_path.begins_with("res://"):
 		scene_path = "res://" + scene_path
-	
+
 	if not scene_path.ends_with(".tscn"):
 		scene_path += ".tscn"
-	
+
 	_add_system_message("Editing scene: " + scene_path)
-	
+
 	# Check if the scene exists
 	if FileAccess.file_exists(scene_path):
 		# Read the scene file
 		var read_result = direct_file_editor.read_file(scene_path)
 		if read_result.success:
 			_add_system_message("Scene file loaded. You can now modify it.")
-			
+
 			# Open the scene in the editor
 			editor_interface.open_scene_from_path(scene_path)
 		else:
@@ -318,10 +323,10 @@ func _edit_scene(scene_path):
 		# Create a new scene file
 		var scene_content = _create_basic_scene(scene_path.get_file().get_basename())
 		var create_result = direct_file_editor.create_scene(scene_path, scene_content)
-		
+
 		if create_result.success:
 			_add_system_message("Created new scene file: " + scene_path)
-			
+
 			# Open the scene in the editor
 			editor_interface.open_scene_from_path(scene_path)
 		else:
@@ -331,19 +336,19 @@ func _edit_script(script_path):
 	# Check if the script path is valid
 	if not script_path.begins_with("res://"):
 		script_path = "res://" + script_path
-	
+
 	if not script_path.ends_with(".gd"):
 		script_path += ".gd"
-	
+
 	_add_system_message("Editing script: " + script_path)
-	
+
 	# Check if the script exists
 	if FileAccess.file_exists(script_path):
 		# Read the script file
 		var read_result = direct_file_editor.read_file(script_path)
 		if read_result.success:
 			_add_system_message("Script file loaded. You can now modify it.")
-			
+
 			# Open the script in the editor
 			var script = load(script_path)
 			editor_interface.edit_script(script)
@@ -353,10 +358,10 @@ func _edit_script(script_path):
 		# Create a new script file
 		var script_content = _create_basic_script(script_path.get_file().get_basename())
 		var create_result = direct_file_editor.create_script(script_path, script_content)
-		
+
 		if create_result.success:
 			_add_system_message("Created new script file: " + script_path)
-			
+
 			# Open the script in the editor
 			var script = load(script_path)
 			editor_interface.edit_script(script)
@@ -403,20 +408,20 @@ func _ready():
 # Add a user message to the chat history
 func _add_user_message(message):
 	messages.append({"role": "user", "content": message})
-	
+
 	var formatted_message = "[color=#ffffff][b]You:[/b][/color]\n" + message + "\n\n"
 	chat_history.append_text(formatted_message)
-	
+
 	# Scroll to the bottom
 	chat_history.scroll_to_line(chat_history.get_line_count())
 
 # Add an AI message to the chat history
 func _add_ai_message(message):
 	messages.append({"role": "assistant", "content": message})
-	
+
 	var formatted_message = "[color=#4CAF50][b]Vector AI:[/b][/color]\n" + message + "\n\n"
 	chat_history.append_text(formatted_message)
-	
+
 	# Scroll to the bottom
 	chat_history.scroll_to_line(chat_history.get_line_count())
 
@@ -424,7 +429,7 @@ func _add_ai_message(message):
 func _add_system_message(message):
 	var formatted_message = "[color=#FFC107][b]System:[/b][/color]\n" + message + "\n\n"
 	chat_history.append_text(formatted_message)
-	
+
 	# Scroll to the bottom
 	chat_history.scroll_to_line(chat_history.get_line_count())
 
@@ -432,10 +437,10 @@ func _add_system_message(message):
 func _apply_ios_styling():
 	# Set chat history styling
 	chat_history.bbcode_enabled = true
-	
+
 	# Set input field styling
 	input_field.syntax_highlighter = null
-	
+
 	# Set button styling
 	var normal_style = StyleBoxFlat.new()
 	normal_style.bg_color = Color(0.2, 0.6, 1.0)
@@ -443,11 +448,11 @@ func _apply_ios_styling():
 	normal_style.corner_radius_top_right = 8
 	normal_style.corner_radius_bottom_left = 8
 	normal_style.corner_radius_bottom_right = 8
-	
+
 	send_button.add_theme_stylebox_override("normal", normal_style)
 	send_button.add_theme_color_override("font_color", Color(1, 1, 1))
 	send_button.add_theme_color_override("font_hover_color", Color(1, 1, 1))
-	
+
 	# Set overall styling
 	var panel_style = StyleBoxFlat.new()
 	panel_style.bg_color = Color(0.15, 0.15, 0.15)

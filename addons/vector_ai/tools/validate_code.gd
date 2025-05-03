@@ -8,35 +8,37 @@ extends SceneTree
 func _init():
 	# Parse command line arguments
 	var args = OS.get_cmdline_args()
-	
+
 	# Find the -- separator
 	var separator_index = args.find("--")
 	if separator_index == -1:
 		print_help()
 		quit()
 		return
-	
+
 	# Get the arguments after the separator
 	args = args.slice(separator_index + 1)
-	
+
 	if args.size() == 0:
 		print_help()
 		quit()
 		return
-	
+
 	# Get the file path
 	var file_path = args[0]
-	
+
 	# Validate the file
 	var result = validate_file(file_path)
-	
+
 	if result.success:
 		print("Validation successful: " + file_path)
 	else:
 		print("Validation failed: " + file_path)
 		print("Error: " + result.error)
-		OS.exit_code = 1
-	
+		# In Godot 4, we can't set exit code directly
+		# Just print an error message instead
+		push_error("Validation failed with error: " + result.error)
+
 	quit()
 
 # Print help information
@@ -59,35 +61,35 @@ func validate_file(file_path):
 		"success": false,
 		"error": ""
 	}
-	
+
 	# Check if the file exists
 	if not FileAccess.file_exists(file_path):
 		result.error = "File does not exist: " + file_path
 		return result
-	
+
 	# Check if the file is a GDScript file
 	if not file_path.ends_with(".gd"):
 		result.error = "Not a GDScript file: " + file_path
 		return result
-	
+
 	# Load the file
 	var file = FileAccess.open(file_path, FileAccess.READ)
 	if not file:
 		result.error = "Failed to open file: " + file_path
 		return result
-	
+
 	var code = file.get_as_text()
 	file.close()
-	
+
 	# Try to parse the script
 	var script = GDScript.new()
 	script.source_code = code
-	
+
 	var error = script.reload()
 	if error != OK:
 		result.error = "Script compilation error: " + str(error)
 		return result
-	
+
 	# If we got here, the script is valid
 	result.success = true
 	return result

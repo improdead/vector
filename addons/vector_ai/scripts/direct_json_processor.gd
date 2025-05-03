@@ -9,7 +9,7 @@ var file_editor
 
 func _ready():
 	print("Direct JSON Processor initialized")
-	
+
 	# Get reference to the direct file editor
 	file_editor = get_parent().get_node("DirectFileEditor")
 	if not file_editor:
@@ -93,12 +93,12 @@ func _process_scene_command(command):
 		"error": "",
 		"message": ""
 	}
-	
+
 	# Validate required fields
 	if not command.has("scene_path"):
 		result.error = "Missing required field: scene_path"
 		return result
-	
+
 	# Read the current scene file
 	var read_result = file_editor.read_file(command.scene_path)
 	if not read_result.success:
@@ -108,53 +108,53 @@ func _process_scene_command(command):
 		else:
 			result.error = read_result.message
 			return result
-	
+
 	var scene_content = read_result.content
-	
+
 	# Process the command based on the action
 	match command.action:
 		"ADD_NODE":
 			if not _validate_fields(command, ["parent_path", "node_type", "node_name"], result):
 				return result
-			
+
 			# Simple implementation: just append a new node to the scene
 			# In a real implementation, you would parse the scene file and insert the node at the right place
 			var node_content = "\n\n[node name=\"%s\" type=\"%s\" parent=\"%s\"]" % [command.node_name, command.node_type, command.parent_path]
-			
+
 			# Add properties if provided
 			if command.has("properties") and command.properties is Dictionary:
 				for property in command.properties:
 					node_content += "\n%s = %s" % [property, _format_property_value(command.properties[property])]
-			
+
 			scene_content += node_content
-			
+
 			# Write the modified scene back to the file
 			var write_result = file_editor.edit_file(command.scene_path, scene_content)
 			if not write_result.success:
 				result.error = write_result.message
 				return result
-			
+
 			result.success = true
 			result.message = "Added node '%s' to scene '%s'" % [command.node_name, command.scene_path]
-		
+
 		"MODIFY_NODE":
 			if not _validate_fields(command, ["node_path", "properties"], result):
 				return result
-			
+
 			# This is a simplified implementation
 			# In a real implementation, you would parse the scene file and modify the node properties
 			result.success = true
 			result.message = "Modified node '%s' in scene '%s' (simplified implementation)" % [command.node_path, command.scene_path]
-		
+
 		"REMOVE_NODE":
 			if not _validate_fields(command, ["node_path"], result):
 				return result
-			
+
 			# This is a simplified implementation
 			# In a real implementation, you would parse the scene file and remove the node
 			result.success = true
 			result.message = "Removed node '%s' from scene '%s' (simplified implementation)" % [command.node_path, command.scene_path]
-	
+
 	return result
 
 # Create a new script file
@@ -452,7 +452,11 @@ func _validate_gdscript(code):
 
 		# Track variables that are already declared with var or const
 		if line.begins_with("var ") or line.begins_with("const "):
-			var var_name = line.substr(line.begins_with("var ") ? 4 : 6).strip_edges()
+			var var_name
+			if line.begins_with("var "):
+				var_name = line.substr(4).strip_edges()
+			else:
+				var_name = line.substr(6).strip_edges()
 			if "=" in var_name:
 				var_name = var_name.split("=")[0].strip_edges()
 			if ":" in var_name:

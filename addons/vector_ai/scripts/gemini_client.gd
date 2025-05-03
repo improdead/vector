@@ -129,9 +129,9 @@ func _save_settings_to_file():
 
 		print("Gemini client saved settings to file. Model: " + model)
 
-func send_request(user_input, scene_info, callback, prompt_type = "direct_scene_edit"):
+func send_request(user_input, scene_info, callback_func, prompt_type = "direct_scene_edit"):
 	if api_key.is_empty():
-		callback(null, "API key not set. Please set it in the settings.")
+		callback_func.call(null, "API key not set. Please set it in the settings.")
 		return
 
 	# Check for game creation requests
@@ -191,7 +191,7 @@ func send_request(user_input, scene_info, callback, prompt_type = "direct_scene_
 			var error = http_request.request(url, headers, HTTPClient.METHOD_POST, json_body)
 
 			if error != OK:
-				callback(null, "HTTP Request Error: " + str(error))
+				callback_func.call(null, "HTTP Request Error: " + str(error))
 
 			return
 		else:
@@ -201,12 +201,12 @@ func send_request(user_input, scene_info, callback, prompt_type = "direct_scene_
 				var result = template_manager.create_game_from_template(game_request.template_name)
 
 				if result.success:
-					callback({
+					callback_func.call({
 						"text": "I've created a " + game_request.game_type + " game for you using the " + game_request.template_name + " template. You can now modify it using Vector AI.",
 						"mode": "direct_scene_edit"
 					}, null)
 				else:
-					callback(null, "Error creating game: " + result.error)
+					callback_func.call(null, "Error creating game: " + result.error)
 				return
 
 	current_callback = callback
@@ -258,7 +258,7 @@ func send_request(user_input, scene_info, callback, prompt_type = "direct_scene_
 	var error = http_request.request(url, headers, HTTPClient.METHOD_POST, json_body)
 
 	if error != OK:
-		callback(null, "HTTP Request Error: " + str(error))
+		callback_func.call(null, "HTTP Request Error: " + str(error))
 
 # Create a custom game prompt
 func _create_custom_game_prompt(description, game_type):
@@ -672,12 +672,12 @@ func _on_request_completed(result, response_code, headers, body):
 		return
 
 	if result != HTTPRequest.RESULT_SUCCESS:
-		current_callback(null, "HTTP Request Failed: " + str(result))
+		current_callback.call(null, "HTTP Request Failed: " + str(result))
 		current_callback = null
 		return
 
 	if response_code != 200:
-		current_callback(null, "HTTP Error: " + str(response_code))
+		current_callback.call(null, "HTTP Error: " + str(response_code))
 		current_callback = null
 		return
 
@@ -686,7 +686,7 @@ func _on_request_completed(result, response_code, headers, body):
 	var error = json.parse(body.get_string_from_utf8())
 
 	if error != OK:
-		current_callback(null, "JSON Parse Error: " + json.get_error_message())
+		current_callback.call(null, "JSON Parse Error: " + json.get_error_message())
 		current_callback = null
 		return
 
@@ -701,7 +701,7 @@ func _on_request_completed(result, response_code, headers, body):
 					response_text += part.text
 
 	if response_text.is_empty():
-		current_callback(null, "Empty response from API")
+		current_callback.call(null, "Empty response from API")
 		current_callback = null
 		return
 
