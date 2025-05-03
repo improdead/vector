@@ -9,21 +9,21 @@ var settings_button: Button
 var clear_button: Button
 
 # References to other components
-var editor_interface
-var gemini_client
-var scene_analyzer
-var scene_modifier
-var scene_file_modifier
-var code_executor
-var project_analyzer
-var context_manager
-var tscn_parser
-var template_manager
-var gdtoolkit_installer
-var advanced_tscn_parser
-var code_generator
-var project_refactor
-var json_command_processor
+var editor_interface = null
+var gemini_client = null
+var scene_analyzer = null
+var scene_modifier = null
+var scene_file_modifier = null
+var code_executor = null
+var project_analyzer = null
+var context_manager = null
+var tscn_parser = null
+var template_manager = null
+var gdtoolkit_installer = null
+var advanced_tscn_parser = null
+var code_generator = null
+var project_refactor = null
+var json_command_processor = null
 
 # Chat history
 var messages = []
@@ -317,6 +317,7 @@ func _preprocess_gdscript_code(code):
 	var in_class = false
 	var known_variables = {}
 	var function_depth = 0
+	var class_depth = 0
 
 	# First pass: identify class structure and variables
 	for i in range(lines.size()):
@@ -329,21 +330,32 @@ func _preprocess_gdscript_code(code):
 		# Check for class definition
 		if line.begins_with("class ") or line.begins_with("extends "):
 			in_class = true
+			if line.begins_with("class "):
+				class_depth += 1
 
 		# Check if we're entering a function
 		if line.begins_with("func "):
 			in_function = true
 			function_depth = 1
 
-		# Track function depth with braces
+		# Track function depth with braces and colons
 		if in_function:
 			if ":" in line:
 				function_depth += 1
-			if line == "pass" or line == "return" or line == "return null" or line == "return false" or line == "return true":
+			if line == "pass" or line.begins_with("return"):
 				function_depth -= 1
 				if function_depth <= 0:
 					in_function = false
 					function_depth = 0
+
+		# Track class depth
+		if in_class and line.ends_with(":"):
+			class_depth += 1
+		if in_class and line == "pass":
+			class_depth -= 1
+			if class_depth <= 0:
+				in_class = false
+				class_depth = 0
 
 		# Track variables that are already declared with var or const
 		if line.begins_with("var ") or line.begins_with("const "):
@@ -359,6 +371,7 @@ func _preprocess_gdscript_code(code):
 	in_function = false
 	in_class = false
 	function_depth = 0
+	class_depth = 0
 
 	# Add a default extends if none is present
 	var has_extends = false
@@ -388,6 +401,8 @@ func _preprocess_gdscript_code(code):
 		# Check for class definition
 		if stripped_line.begins_with("class ") or stripped_line.begins_with("extends "):
 			in_class = true
+			if stripped_line.begins_with("class "):
+				class_depth += 1
 			processed_lines.append(line)
 			continue
 
@@ -402,7 +417,7 @@ func _preprocess_gdscript_code(code):
 		if in_function:
 			if ":" in stripped_line:
 				function_depth += 1
-			if stripped_line == "pass" or stripped_line == "return" or stripped_line == "return null" or stripped_line == "return false" or stripped_line == "return true":
+			if stripped_line == "pass" or stripped_line.begins_with("return"):
 				function_depth -= 1
 				if function_depth <= 0:
 					in_function = false
@@ -411,6 +426,15 @@ func _preprocess_gdscript_code(code):
 			# Inside functions, just add the line as is
 			processed_lines.append(line)
 			continue
+
+		# Track class depth
+		if in_class and stripped_line.ends_with(":"):
+			class_depth += 1
+		if in_class and stripped_line == "pass":
+			class_depth -= 1
+			if class_depth <= 0:
+				in_class = false
+				class_depth = 0
 
 		# Fix undeclared variables at class level
 		if in_class and not in_function:
