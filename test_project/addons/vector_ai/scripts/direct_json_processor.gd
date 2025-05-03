@@ -506,7 +506,7 @@ func _validate_gdscript(code):
 			processed_lines.append(line)
 			continue
 
-		# Track function depth with braces and colons
+		# Track function depth
 		if in_function:
 			if ":" in stripped_line:
 				function_depth += 1
@@ -515,6 +515,10 @@ func _validate_gdscript(code):
 				if function_depth <= 0:
 					in_function = false
 					function_depth = 0
+
+			# Inside functions, just add the line as is
+			processed_lines.append(line)
+			continue
 
 		# Track class depth
 		if in_class and stripped_line.ends_with(":"):
@@ -525,9 +529,52 @@ func _validate_gdscript(code):
 				in_class = false
 				class_depth = 0
 
-		# Process the line
-		processed_lines.append(line)
+		# Fix undeclared variables at class level
+		if in_class and not in_function:
+			# Skip lines that already have var/const, comments, or other declarations
+			if stripped_line.begins_with("var ") or stripped_line.begins_with("const ") or \
+			   stripped_line.begins_with("#") or stripped_line.begins_with("@") or \
+			   stripped_line.begins_with("signal ") or stripped_line.begins_with("enum "):
+				processed_lines.append(line)
+				continue
 
-	# Join the processed lines
+			# Check for variable assignments
+			if "=" in stripped_line and not "==" in stripped_line and not "!=" in stripped_line and not "<=" in stripped_line and not ">=" in stripped_line:
+				var parts = stripped_line.split("=", true, 1)
+				var variable_name = parts[0].strip_edges()
+
+				# Only consider it a variable if it's a simple identifier
+				if not "." in variable_name and not "[" in variable_name and not "(" in variable_name and \
+				   not variable_name.begins_with("if ") and not variable_name.begins_with("for ") and \
+				   not variable_name.begins_with("while ") and not variable_name.begins_with("match "):
+
+					# Add var declaration if not already known
+					if not known_variables.has(variable_name):
+						# Preserve indentation
+						var indent = ""
+						for j in range(line.length()):
+							if line[j] == " " or line[j] == "\t":
+								indent += line[j]
+							else:
+								break
+
+						processed_lines.append(indent + "var " + stripped_line)
+						known_variables[variable_name] = true
+						continue
+
+			# If we got here, just add the line as is
+			processed_lines.append(line)
+
+	# Make sure there's at least one function
+	var has_ready = false
+	for line in processed_lines:
+		if line.strip_edges().begins_with("func _ready"):
+			has_ready = true
+			break
+
+	if not has_ready:
+		processed_lines.append("\nfunc _ready():")
+		processed_lines.append("\tpass")
+
 	result.code = "\n".join(processed_lines)
 	return result

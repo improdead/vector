@@ -53,6 +53,16 @@ text = "Model:"
 [node name="ModelOption" type="OptionButton" parent="VBoxContainer/GridContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+item_count = 4
+selected = 0
+popup/item_0/text = "gemini-2.5-flash-preview-04-17"
+popup/item_0/id = 0
+popup/item_1/text = "gemini-2.5-pro-preview-03-25"
+popup/item_1/id = 1
+popup/item_2/text = "gemini-2.0-flash"
+popup/item_2/id = 2
+popup/item_3/text = "gemini-1.5-pro"
+popup/item_3/id = 3
 
 [node name="TemperatureLabel" type="Label" parent="VBoxContainer/GridContainer"]
 layout_mode = 2
@@ -88,6 +98,10 @@ layout_mode = 2
 [node name="ButtonContainer" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 alignment = 1
+
+[node name="ResetButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+layout_mode = 2
+text = "Reset to Default"
 
 [node name="SaveButton" type="Button" parent="VBoxContainer/ButtonContainer"]
 layout_mode = 2
