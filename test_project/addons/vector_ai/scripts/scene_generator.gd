@@ -45,31 +45,91 @@ script = SubResource("GDScript_main")
 """
 	print("Scene content created, length: " + str(scene_content.length()))
 
-	# Try to create or update the scene file using resource path
-	var result = create_scene(scene_path, scene_content)
+	# Try using PowerShell directly first (most reliable method)
+	print("Trying to write file using PowerShell directly...")
+	var result = create_scene_with_powershell(abs_scene_path, scene_content)
 
-	# If that fails, try using the absolute path
+	# If that fails, try the other methods
 	if not result.success:
-		print("Failed to write using resource path, trying absolute path...")
-		result = create_scene(abs_scene_path, scene_content)
+		print("Failed to write using PowerShell, trying resource path...")
+		result = create_scene(scene_path, scene_content)
 
-		# If that also fails, try using OS.execute to write the file
+		# If that fails, try using the absolute path
 		if not result.success:
-			print("Failed to write using absolute path, trying OS.execute...")
-			result = create_scene_with_os_execute(abs_scene_path, scene_content)
+			print("Failed to write using resource path, trying absolute path...")
+			result = create_scene(abs_scene_path, scene_content)
 
-			# If that also fails, try writing to a different file
+			# If that also fails, try using OS.execute to write the file
 			if not result.success:
-				print("Failed to write using OS.execute, trying alternative file...")
-				result = create_scene(project_dir + "vector_ai_generated.tscn", scene_content)
+				print("Failed to write using absolute path, trying OS.execute...")
+				result = create_scene_with_os_execute(abs_scene_path, scene_content)
 
-				# If that also fails, try using OS.execute with the alternative file
+				# If that also fails, try writing to a different file
 				if not result.success:
-					print("Failed to write alternative file, trying OS.execute with alternative file...")
-					result = create_scene_with_os_execute(project_dir + "vector_ai_generated.tscn", scene_content)
+					print("Failed to write using OS.execute, trying alternative file...")
+					result = create_scene(project_dir + "vector_ai_generated.tscn", scene_content)
 
 	print("Scene creation result: " + str(result.success) + " - " + result.message)
 	return result
+
+# Create a scene file using PowerShell directly
+func create_scene_with_powershell(path, content):
+	print("Attempting to write file directly using PowerShell: " + path)
+
+	# Create a temporary file with the content
+	var temp_dir = OS.get_executable_path().get_base_dir()
+	var temp_path = temp_dir + "/temp_scene.txt"
+
+	# Write content to temporary file
+	var file = FileAccess.open(temp_path, FileAccess.WRITE)
+	if file == null:
+		print("Failed to create temporary file")
+		return {
+			"success": false,
+			"message": "Failed to create temporary file"
+		}
+
+	file.store_string(content)
+	file.close()
+
+	print("Temporary file created at: " + temp_path)
+
+	# Use PowerShell to write the file
+	var output = []
+	var ps_command = "Set-Content -Path '" + path + "' -Value (Get-Content -Path '" + temp_path + "' -Raw) -Force"
+	print("PowerShell command: " + ps_command)
+
+	var exit_code = OS.execute("powershell", ["-Command", ps_command], output)
+
+	print("PowerShell exit code: " + str(exit_code))
+	print("PowerShell output: " + str(output))
+
+	if exit_code != 0:
+		return {
+			"success": false,
+			"message": "Failed to write file using PowerShell: " + str(output)
+		}
+
+	print("File written successfully using PowerShell!")
+
+	# Verify the file was written
+	var verify_output = []
+	var verify_command = "Test-Path -Path '" + path + "'"
+	var verify_exit_code = OS.execute("powershell", ["-Command", verify_command], verify_output)
+
+	if verify_exit_code == 0 and verify_output.size() > 0 and verify_output[0].strip_edges() == "True":
+		print("File existence verified with PowerShell!")
+	else:
+		print("WARNING: File existence could not be verified with PowerShell!")
+		return {
+			"success": false,
+			"message": "File existence could not be verified with PowerShell"
+		}
+
+	return {
+		"success": true,
+		"message": "Scene created successfully at " + path + " using PowerShell"
+	}
 
 # Create a scene file using OS.execute
 func create_scene_with_os_execute(path, content):
