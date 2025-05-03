@@ -1,6 +1,7 @@
 @tool
 extends EditorPlugin
 
+# Use only the direct file access version of the sidebar
 const DirectSidebar = preload("res://addons/vector_ai/scenes/direct_sidebar.tscn")
 const SettingsManager = preload("res://addons/vector_ai/scripts/settings_manager.gd")
 
