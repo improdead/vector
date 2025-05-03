@@ -180,6 +180,9 @@ func send_request(user_input, scene_info, callback, prompt_type = "direct_scene_
 			# Convert body to JSON
 			var json_body = JSON.stringify(body)
 
+			# Always force the model to be Gemini 2.5 Flash
+			model = "gemini-2.5-flash-preview-04-17"
+
 			# Prepare the request URL
 			var url = "https://generativelanguage.googleapis.com/v1/models/" + model + ":generateContent?key=" + api_key
 
@@ -240,6 +243,9 @@ func send_request(user_input, scene_info, callback, prompt_type = "direct_scene_
 
 	# Convert body to JSON
 	var json_body = JSON.stringify(body)
+
+	# Always force the model to be Gemini 2.5 Flash
+	model = "gemini-2.5-flash-preview-04-17"
 
 	# Prepare the request URL
 	var url = "https://generativelanguage.googleapis.com/v1/models/" + model + ":generateContent?key=" + api_key

@@ -27,43 +27,47 @@ func _ready():
 # Load settings from file
 func load_settings():
 	print("Loading settings from: " + settings_path)
-	
+
 	# Start with default settings
 	settings = default_settings.duplicate()
-	
+
 	# Try to load from file
 	var settings_file = FileAccess.open(settings_path, FileAccess.READ)
-	
+
 	if settings_file:
 		var settings_text = settings_file.get_as_text()
 		settings_file.close()
-		
+
 		var json = JSON.new()
 		var error = json.parse(settings_text)
-		
+
 		if error == OK:
 			var loaded_settings = json.get_data()
-			
+
 			# Update settings with loaded values
 			for key in loaded_settings:
-				settings[key] = loaded_settings[key]
-			
+				if key != "model":  # Don't load the model from file
+					settings[key] = loaded_settings[key]
+
+			# Always force the model to Gemini 2.5 Flash
+			settings.model = "gemini-2.5-flash-preview-04-17"
+
 			print("Settings loaded successfully. Model: " + settings.model)
 		else:
 			push_error("Error parsing settings JSON: " + json.get_error_message())
 	else:
 		push_warning("Settings file not found. Using default settings.")
 		save_settings()  # Create default settings file
-	
+
 	# Emit signal
 	settings_changed.emit()
-	
+
 	return settings
 
 # Save settings to file
 func save_settings():
 	var settings_file = FileAccess.open(settings_path, FileAccess.WRITE)
-	
+
 	if settings_file:
 		settings_file.store_string(JSON.stringify(settings, "  "))
 		settings_file.close()
@@ -79,7 +83,13 @@ func get_setting(key, default_value = null):
 
 # Set a setting value
 func set_setting(key, value):
-	settings[key] = value
+	# Always ensure model is Gemini 2.5 Flash
+	if key == "model":
+		settings[key] = "gemini-2.5-flash-preview-04-17"
+		print("Attempted to change model, but it's locked to Gemini 2.5 Flash")
+	else:
+		settings[key] = value
+
 	save_settings()
 	settings_changed.emit()
 
