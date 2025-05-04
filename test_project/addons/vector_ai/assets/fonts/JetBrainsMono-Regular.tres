@@ -1,4 +1,10 @@
-[gd_resource type="FontFile" path="res://addons/vector_ai/assets/fonts/JetBrainsMono-Regular.ttf" id="1_font"]
+[gd_resource type="FontFile" load_steps=1 format=3]
 
 [resource]
-font_data = ExtResource("1_font")
+data/0 = null
+cache/0/16/0/ascent = 0.0
+cache/0/16/0/descent = 0.0
+cache/0/16/0/underline_position = 0.0
+cache/0/16/0/underline_thickness = 0.0
+cache/0/16/0/scale = 1.0
+cache/0/16/0/kerning_overrides/16/0 = Vector2(0, 0)

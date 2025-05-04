@@ -1,7 +1,6 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://addons/vector_ai/scripts/main_dock.gd" id="1_main"]
-[ext_resource type="FontFile" path="res://addons/vector_ai/assets/fonts/JetBrainsMono-Regular.ttf" id="2_font"]
 [ext_resource type="Theme" path="res://addons/vector_ai/assets/vector_ai_theme.tres" id="3_theme"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dark"]
