@@ -369,8 +369,8 @@ func clean_code(code):
 	# Rejoin the lines
 	code = "\n".join(cleaned_lines)
 
-	# Make sure the code starts with 'extends'
-	if not code.strip_edges().begins_with("extends"):
+	# Make sure the code starts with 'extends' but don't add it if it already exists
+	if not code.strip_edges().begins_with("extends") and not "extends Node2D" in code:
 		print("Adding missing extends statement")
 		code = "extends Node2D\n\n" + code
 
