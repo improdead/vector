@@ -1,6 +1,6 @@
 [gd_resource type="Theme" load_steps=6 format=3]
 
-[ext_resource type="FontFile" uid="uid://c4vkjd5p4jyy1" path="res://addons/vector_ai/assets/fonts/JetBrainsMono-Regular.ttf" id="1_font"]
+[ext_resource type="FontFile" path="res://addons/vector_ai/assets/fonts/JetBrainsMono-Regular.ttf" id="1_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_normal"]
 content_margin_left = 16.0
