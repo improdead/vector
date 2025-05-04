@@ -281,5 +281,3 @@ func create_platform_tile(position: Vector2, parent_node: Node2D) -> void:
 
 [node name="Main" type="Node2D"]
 script = SubResource("GDScript_main")
-
-

@@ -1,0 +1,4 @@
+[gd_resource type="FontFile" path="res://addons/vector_ai/assets/fonts/JetBrainsMono-Regular.ttf" id="1_font"]
+
+[resource]
+font_data = ExtResource("1_font")

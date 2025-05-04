@@ -60,12 +60,11 @@ func _ready() -> void:
 	# Create a solid background color rect filling the approximate viewport
 	var background = ColorRect.new()
 	background.color = BACKGROUND_COLOR
-	# Set a large size to cover a typical window; ideally this would adapt
+	# Set a large size, ideally this would adapt to viewport size changes
 	background.size = Vector2(2000, 1200)
 	add_child(background)
 
 	# --- Create Level ---
-	# A container for platform nodes to keep the scene tree organized
 	var level_container = Node2D.new()
 	level_container.name = "LevelContainer"
 	add_child(level_container)
@@ -73,41 +72,33 @@ func _ready() -> void:
 	var player_start_pos: Vector2 = Vector2.ZERO
 	var goal_pos: Vector2 = Vector2.ZERO
 
-	# Iterate through the level grid to create platforms, find player start and goal
 	for row_index in range(LEVEL_GRID.size()):
 		for col_index in range(LEVEL_GRID[row_index].size()):
 			var cell_type = LEVEL_GRID[row_index][col_index]
-			# Calculate the top-left position of the current grid cell
 			var tile_position = Vector2(col_index * TILE_SIZE, row_index * TILE_SIZE)
 
 			match cell_type:
 				1: # Platform
 					create_platform_tile(tile_position, level_container)
 				2: # Player Start
-					# Position the player in the center of the start cell
-					player_start_pos = tile_position + Vector2(TILE_SIZE / 2.0, TILE_SIZE / 2.0)
+					player_start_pos = tile_position + Vector2(TILE_SIZE / 2.0, TILE_SIZE / 2.0) # Center in cell
 				3: # Goal
-					# Position the goal in the center of the goal cell
-					goal_pos = tile_position + Vector2(TILE_SIZE / 2.0, TILE_SIZE / 2.0)
+					goal_pos = tile_position + Vector2(TILE_SIZE / 2.0, TILE_SIZE / 2.0) # Center in cell
 				0: # Empty space, do nothing
 					pass
 
 	# --- Create Player ---
 	player = CharacterBody2D.new()
 	player.name = "Player"
-	# Set the player's initial position to the calculated start position
-	player.global_position = player_start_pos
+	player.global_position = player_start_pos # Use the calculated start position
 	add_child(player)
 
 	# Player Visual (a colored square)
 	var player_visual = ColorRect.new()
 	player_visual.color = PLAYER_COLOR
-	# Player size is slightly smaller than a tile to fit within gaps
-	var player_size = Vector2(TILE_SIZE * 0.6, TILE_SIZE * 0.8)
+	var player_size = Vector2(TILE_SIZE * 0.6, TILE_SIZE * 0.8) # Slightly taller than wide
 	player_visual.size = player_size
-	# Set pivot to the center for easier positioning relative to CharacterBody2D origin
 	player_visual.pivot_offset = player_size / 2.0
-	# Position the visual so its center aligns with the CharacterBody2D origin
 	player_visual.position = -player_size / 2.0
 	player.add_child(player_visual)
 
@@ -116,24 +107,20 @@ func _ready() -> void:
 	var player_shape = RectangleShape2D.new()
 	player_shape.size = player_size
 	player_collision_shape.shape = player_shape
-	# CollisionShape2D is centered by default, which aligns with the CharacterBody2D origin
 	player.add_child(player_collision_shape)
 
 	# --- Create Goal ---
 	goal = Area2D.new()
 	goal.name = "Goal"
-	# Set the goal's position to the calculated goal position
-	goal.global_position = goal_pos
+	goal.global_position = goal_pos # Use the calculated goal position
 	add_child(goal)
 
 	# Goal Visual (a colored square)
 	var goal_visual = ColorRect.new()
 	goal_visual.color = GOAL_COLOR
-	var goal_size = Vector2(TILE_SIZE * 0.8, TILE_SIZE * 0.8) # Slightly smaller than a tile
+	var goal_size = Vector2(TILE_SIZE * 0.8, TILE_SIZE * 0.8)
 	goal_visual.size = goal_size
-	# Set pivot to the center for easier positioning relative to Area2D origin
 	goal_visual.pivot_offset = goal_size / 2.0
-	# Position the visual so its center aligns with the Area2D origin
 	goal_visual.position = -goal_size / 2.0
 	goal.add_child(goal_visual)
 
@@ -142,144 +129,138 @@ func _ready() -> void:
 	var goal_shape = RectangleShape2D.new()
 	goal_shape.size = goal_size
 	goal_collision_shape.shape = goal_shape
-	# CollisionShape2D is centered by default, which aligns with the Area2D origin
 	goal.add_child(goal_collision_shape)
 
-	# Connect the signal to detect when a body (like the player) enters the goal area
+	# Connect the signal to detect when a body enters the goal area
 	goal.body_entered.connect(_on_goal_body_entered)
 
 	# --- Create UI for Win Message ---
-	# Use a CanvasLayer to ensure UI elements are drawn on top
 	var canvas_layer = CanvasLayer.new()
 	add_child(canvas_layer)
 
 	win_label = Label.new()
 	win_label.name = "WinLabel"
 	win_label.text = "You Win!"
-	# Set text color and shadow for visibility
 	win_label.add_theme_color_override("font_color", Color.html("#FFFFFF")) # White text
 	win_label.add_theme_color_override("font_shadow_color", Color.html("#000000")) # Black shadow
 	win_label.add_theme_constant_override("shadow_offset_x", 2)
 	win_label.add_theme_constant_override("shadow_offset_y", 2)
 	win_label.add_theme_constant_override("shadow_outline_size", 4) # Thicker shadow outline
 
-	# Scale the label to make the default font larger
-	win_label.set_scale(Vector2(4, 4))
+	# Attempt to set font size (might rely on default theme or font)
+	# A simple way without external resources is scaling
+	win_label.set_scale(Vector2(4, 4)) # Scale the label to appear larger
 
 	# Position the label in the center of the viewport
-	# get_viewport_rect().size gives the current viewport dimensions
+	# Note: Viewport size is only reliable after a frame or two,
+	# but for a simple game, positioning in _ready is usually sufficient.
 	var viewport_size = get_viewport_rect().size
 	win_label.position = viewport_size / 2.0
-	# Set alignment to center the text within the label's bounds
 	win_label.set_horizontal_alignment(HorizontalAlignment.CENTER)
 	win_label.set_vertical_alignment(VerticalAlignment.CENTER)
-	# Adjust the position based on the label's size and scale so its center is at viewport center
-	# Note: get_size() here gives the size *before* scaling. We need to adjust by scaled size.
-	var scaled_size = win_label.get_size() * win_label.get_scale()
-	win_label.position -= scaled_size / 2.0
+	# Adjust position slightly based on current size after setting text/scale
+	# This is an approximation; for perfect centering, use _process or _draw
+	# or rely on layout containers. For simplicity here, we'll use a rough offset.
+	# A better way is to set pivot and then position, but Label doesn't have pivot like Control nodes.
+	# Let's just subtract half the scaled size.
+	win_label.position -= win_label.get_size() * win_label.get_scale() / 2.0
 
 	win_label.visible = false # Hide the label initially
 	canvas_layer.add_child(win_label)
 
 	# --- Add Camera ---
 	var camera = Camera2D.new()
-	# Make the camera a child of the player to follow it automatically
+	# Make the camera a child of the player to follow it
 	player.add_child(camera)
-	# Set the camera to make the player the center of the view
-	camera.make_current()
-	# Optional: Enable smoothing for smoother camera movement
-	# camera.smoothing_enabled = true
-	# camera.smoothing_speed = 5.0
+	# Optional: Set camera limits based on level size
+	# camera.limit_left = 0
+	# camera.limit_right = LEVEL_GRID[0].size() * TILE_SIZE
+	# camera.limit_top = 0
+	# camera.limit_bottom = LEVEL_GRID.size() * TILE_SIZE
+	# camera.limit_smoothed = true # Smooth camera movement
+	# camera.position_smoothing_speed = 5.0 # Adjust smoothing speed
 
 
 # --- Physics Process ---
 # Called every physics frame. Handles movement and collisions.
 func _physics_process(delta: float) -> void:
-	# Stop processing movement inputs if the game is won
+	# Stop processing movement if the game is won
 	if game_won:
-		player.velocity.x = 0 # Stop horizontal movement immediately
-		# Continue applying gravity so the player falls if they win while airborne
+		player.velocity.x = 0 # Stop horizontal movement
+		# Apply gravity even when won, so player falls if off edge
 		player.velocity.y += GRAVITY * delta
-		# Perform the move and slide calculation even when won to handle falling/collisions
 		player.move_and_slide()
-		return # Exit the function early if the game is won
+		return # Stop processing input and movement
 
 	# --- Apply Gravity ---
-	# If the player is not currently on the floor, apply gravity to their vertical velocity
+	# Add gravity to the player's vertical velocity
 	if not player.is_on_floor():
 		player.velocity.y += GRAVITY * delta
 
 	# --- Handle Input ---
-	# Get horizontal input. Input.get_axis returns -1 for left, 1 for right, 0 for none.
+	# Get horizontal input (-1 for left, 1 for right, 0 for none)
 	var input_axis: float = Input.get_axis("move_left", "move_right")
 
-	# Set the player's horizontal velocity based on the input axis and speed
+	# Set horizontal velocity based on input
 	player.velocity.x = input_axis * PLAYER_SPEED
 
 	# Handle jump input
-	# Check if the "jump" action was just pressed AND the player is currently on the floor
+	# Check if the jump action is just pressed AND the player is on the floor
 	if Input.is_action_just_pressed("jump") and player.is_on_floor():
-		# Set the vertical velocity to the jump velocity (negative value for upward movement)
 		player.velocity.y = JUMP_VELOCITY
 
 	# --- Move and Slide ---
-	# Perform the movement calculation and handle collisions with static bodies (like platforms)
+	# Move the player and handle collisions with platforms
 	player.move_and_slide()
 
 
 # --- Signal Handlers ---
-# Called when a physics body enters the goal area.
+# Called when a body enters the goal area
 func _on_goal_body_entered(body: Node) -> void:
-	# Check if the body that entered the goal area is the player node instance
-	# Comparing node references (pointers) is the correct way to check identity
+	# Check if the body that entered is the player node
+	# Comparing node references is reliable
 	if body == player:
 		win_game()
 
 
 # --- Game Logic Functions ---
-# Handles actions needed when the player reaches the goal and wins the game.
+# Handles actions needed when the player wins
 func win_game() -> void:
-	# Check if the game hasn't already been won to prevent triggering multiple times
-	if not game_won:
-		game_won = true # Set the game state to won
-		win_label.visible = true # Make the win message visible
-		# Optionally stop player horizontal movement immediately upon winning
+	if not game_won: # Only trigger win logic once
+		game_won = true
+		win_label.visible = true
+		# Optionally stop player horizontal movement immediately
 		player.velocity.x = 0
-		print("You Win!") # Output a message to the console
+		print("You Win!") # Print to console for debugging
 
 
 # --- Helper Function to Create Platform Tiles ---
-# Creates a StaticBody2D with a visual and collision shape for a single platform segment.
+# Creates a StaticBody2D with visual and collision shape for a platform segment
 func create_platform_tile(position: Vector2, parent_node: Node2D) -> void:
-	# Create the StaticBody2D node which represents the platform's physical presence
 	var platform = StaticBody2D.new()
-	# Set the global position of the platform tile (top-left corner of the tile)
+	# Set the global position of the platform tile (top-left corner)
 	platform.global_position = position
-	platform.name = "Platform" # Assign a name for easier identification in the debugger
-	parent_node.add_child(platform) # Add the platform node to the specified parent
+	platform.name = "Platform" # Optional: Name nodes for easier debugging
+	parent_node.add_child(platform)
 
-	# Create the visual representation of the platform (a colored rectangle)
+	# Platform Visual (a colored square)
 	var platform_visual = ColorRect.new()
-	platform_visual.color = PLATFORM_COLOR # Set the color from constants
-	platform_visual.size = Vector2(TILE_SIZE, TILE_SIZE) # Set the size to match the tile size
-	platform_visual.position = Vector2.ZERO # Position the visual at the StaticBody2D's origin (top-left)
-	platform.add_child(platform_visual) # Add the visual as a child of the platform
+	platform_visual.color = PLATFORM_COLOR
+	platform_visual.size = Vector2(TILE_SIZE, TILE_SIZE)
+	platform_visual.position = Vector2.ZERO # Visual is at the StaticBody2D's origin (its top-left)
+	platform.add_child(platform_visual)
 
-	# Create the collision shape for the platform
+	# Platform Collision Shape
 	var platform_collision_shape = CollisionShape2D.new()
 	var platform_shape = RectangleShape2D.new()
-	platform_shape.size = Vector2(TILE_SIZE, TILE_SIZE) # Set the size of the collision shape
-	platform_collision_shape.shape = platform_shape # Assign the shape to the CollisionShape2D
-	# CollisionShape2D's position property is relative to its parent (StaticBody2D).
-	# The shape itself is centered on this position.
-	# To make the collision shape cover the tile area starting from the parent's origin (top-left),
-	# we need to position the CollisionShape2D at the center of the tile.
+	platform_shape.size = Vector2(TILE_SIZE, TILE_SIZE)
+	# Collision shape origin is centered by default. Offset it by half its size
+	# to align with the StaticBody2D's top-left origin.
 	platform_collision_shape.position = Vector2(TILE_SIZE / 2.0, TILE_SIZE / 2.0)
-	platform.add_child(platform_collision_shape) # Add the collision shape as a child of the platform
+	platform_collision_shape.shape = platform_shape
+	platform.add_child(platform_collision_shape)
 
 """
 
 [node name="Main" type="Node2D"]
 script = SubResource("GDScript_main")
-
-

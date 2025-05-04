@@ -6,7 +6,7 @@ A Godot plugin with an integrated AI assistant that can help you create and modi
 
 - **Create Complete Games**: Generate full games from natural language descriptions
 - **Direct File Access**: Reliable file editing without relying on Godot's API
-- **Dark-Futuristic UI**: Custom Vector AI theme with a sleek, modern design
+- **Dark-Futuristic UI**: Custom Vector AI theme with a sleek, modern design inspired by modern code editors
 - **AI Sidebar**: Integrated AI assistant that can analyze and modify your scenes
 - **Gemini 2.5 Flash Integration**: Powered by Google's latest Gemini AI models
 - **User-Friendly Interface**: Intuitive chat interface for interacting with the AI
