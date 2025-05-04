@@ -1,34 +1,34 @@
-[gd_resource type="Theme" load_steps=5 format=3]
+[gd_resource type="Theme" load_steps=5 format=3 uid="uid://bhhqmc0ip1itr"]
 
-[ext_resource type="FontFile" path="res://addons/vector_ai/assets/fonts/JetBrainsMono-Regular.ttf" id="1_font"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_normal"]
-content_margin_left = 16.0
-content_margin_top = 8.0
-content_margin_right = 16.0
-content_margin_bottom = 8.0
-bg_color = Color(0.15, 0.15, 0.15, 1.0)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.25, 0.25, 0.25, 1.0)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+[ext_resource type="FontFile" uid="uid://qyryhjiiwxmr" path="res://addons/vector_ai/assets/fonts/JetBrainsMono-Regular.ttf" id="1_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_hover"]
 content_margin_left = 16.0
 content_margin_top = 8.0
 content_margin_right = 16.0
 content_margin_bottom = 8.0
-bg_color = Color(0.18, 0.18, 0.18, 1.0)
+bg_color = Color(0.18, 0.18, 0.18, 1)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.35, 0.35, 0.35, 1.0)
+border_color = Color(0.35, 0.35, 0.35, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_normal"]
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.15, 0.15, 0.15, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.25, 0.25, 0.25, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -39,12 +39,12 @@ content_margin_left = 16.0
 content_margin_top = 8.0
 content_margin_right = 16.0
 content_margin_bottom = 8.0
-bg_color = Color(0.1, 0.1, 0.1, 1.0)
+bg_color = Color(0.1, 0.1, 0.1, 1)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.3, 0.3, 0.3, 1.0)
+border_color = Color(0.3, 0.3, 0.3, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -53,15 +53,15 @@ corner_radius_bottom_left = 4
 [resource]
 default_font = ExtResource("1_font")
 default_font_size = 14
-Button/colors/font_color = Color(0.9, 0.9, 0.9, 1.0)
-Button/colors/font_hover_color = Color(1, 1, 1, 1.0)
-Button/colors/font_pressed_color = Color(0.8, 0.8, 0.8, 1.0)
+Button/colors/font_color = Color(0.9, 0.9, 0.9, 1)
+Button/colors/font_hover_color = Color(1, 1, 1, 1)
+Button/colors/font_pressed_color = Color(0.8, 0.8, 0.8, 1)
 Button/styles/hover = SubResource("StyleBoxFlat_button_hover")
 Button/styles/normal = SubResource("StyleBoxFlat_button_normal")
 Button/styles/pressed = SubResource("StyleBoxFlat_button_pressed")
-Label/colors/font_color = Color(0.9, 0.9, 0.9, 1.0)
-RichTextLabel/colors/default_color = Color(0.9, 0.9, 0.9, 1.0)
-TextEdit/colors/background_color = Color(0.15, 0.15, 0.15, 1.0)
-TextEdit/colors/font_color = Color(0.9, 0.9, 0.9, 1.0)
+Label/colors/font_color = Color(0.9, 0.9, 0.9, 1)
+RichTextLabel/colors/default_color = Color(0.9, 0.9, 0.9, 1)
+TextEdit/colors/background_color = Color(0.15, 0.15, 0.15, 1)
+TextEdit/colors/font_color = Color(0.9, 0.9, 0.9, 1)
 TextEdit/colors/line_number_color = Color(0.5, 0.5, 0.5, 0.5)
-Window/colors/title_color = Color(0.9, 0.9, 0.9, 1.0)
+Window/colors/title_color = Color(0.9, 0.9, 0.9, 1)
