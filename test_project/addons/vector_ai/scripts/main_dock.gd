@@ -80,6 +80,10 @@ func generate_game(description):
 	# Create the prompt for game generation
 	var prompt = create_game_prompt(description, current_scene)
 	print("Created prompt for game generation")
+	print("Prompt length: " + str(prompt.length()))
+
+	# Update UI to show we're sending the request
+	$PanelContainer/VBoxContainer/OutputText.text = "Sending request to Gemini...\nThis may take a moment."
 
 	# Send the request to Gemini
 	print("Sending request to Gemini...")
@@ -88,17 +92,42 @@ func generate_game(description):
 
 		if error:
 			print("Error from Gemini: " + error)
-			$PanelContainer/VBoxContainer/OutputText.text = "Error: " + error
+			$PanelContainer/VBoxContainer/OutputText.text = "Error from Gemini: " + error
+
+			# Add a retry button
+			var retry_button = Button.new()
+			retry_button.name = "RetryButton"
+			retry_button.text = "Retry Request"
+			retry_button.pressed.connect(func(): generate_game(description))
+			$PanelContainer/VBoxContainer.add_child(retry_button)
+
+			# Move the button to be right after the output text
+			var output_text_idx = $PanelContainer/VBoxContainer.get_children().find($PanelContainer/VBoxContainer/OutputText)
+			if output_text_idx != -1:
+				$PanelContainer/VBoxContainer.move_child(retry_button, output_text_idx + 1)
 		else:
 			print("Response received successfully")
+
+			# Check if response text exists
+			if not response.has("text") or response.text.is_empty():
+				print("Response object doesn't contain text or text is empty")
+				$PanelContainer/VBoxContainer/OutputText.text = "Error: Received empty response from Gemini API."
+				return
+
+			print("Response text length: " + str(response.text.length()))
+
+			# Log a snippet of the response for debugging
+			var snippet_length = min(100, response.text.length())
+			print("Response text snippet: " + response.text.substr(0, snippet_length) + "...")
 
 			# Extract code from the response
 			var code = extract_code_from_response(response.text)
 			if code.is_empty():
 				print("No code found in the response")
-				$PanelContainer/VBoxContainer/OutputText.text = "No code found in the response."
+				$PanelContainer/VBoxContainer/OutputText.text = "No code found in the response. The API response didn't contain properly formatted code blocks.\n\nResponse snippet:\n" + response.text.substr(0, min(500, response.text.length()))
 			else:
 				print("Code extracted successfully, length: " + str(code.length()))
+				print("Code snippet: " + code.substr(0, min(100, code.length())) + "...")
 
 				# Create the scene with the generated code
 				print("Creating scene with generated code...")
@@ -138,6 +167,10 @@ func generate_game(description):
 				else:
 					print("Error creating scene: " + result.message)
 					$PanelContainer/VBoxContainer/OutputText.text = "Error creating scene: " + result.message
+
+					# Add backup file information if available
+					if result.has("backup_path"):
+						$PanelContainer/VBoxContainer/OutputText.text += "\n\nA backup copy of the generated file is available at: " + result.backup_path
 
 		# Re-enable the generate button
 		$PanelContainer/VBoxContainer/GenerateButton.disabled = false
@@ -218,7 +251,7 @@ func create_game_prompt(description, current_scene):
 	""" + current_scene + """
 	```
 
-	Your response should include:
+	Your response MUST follow this EXACT format:
 
 	ANALYSIS:
 	[Your analysis of the game request and how you plan to implement it]
@@ -255,6 +288,10 @@ func create_game_prompt(description, current_scene):
 	8. Use consistent indentation with tabs or spaces
 	9. For Vector2 values, use Vector2(x, y) format, not (x, y)
 	10. For colors, use Color(r, g, b) or Color.html("#hexcode") format
+	11. Always use semicolons at the end of statements where appropriate
+	12. Always use proper function declarations with colons: func my_function():
+	13. Always properly initialize arrays and dictionaries: var my_array = []
+	14. Always use proper signal connections: some_node.signal_name.connect(self._on_signal_name)
 
 	IMPORTANT GUIDELINES:
 	1. Write a COMPLETE, SELF-CONTAINED script that creates all necessary nodes programmatically
@@ -271,6 +308,40 @@ func create_game_prompt(description, current_scene):
 	12. The script will be embedded in a scene file and attached to a Node2D
 	13. DO NOT include the script path or file name in your code
 	14. DO NOT include any file operations or loading external scripts
+	15. Make sure to properly handle node references and avoid null references
+	16. Use proper error handling with if statements to check for null values
+	17. Ensure all variables are properly declared before use
+	18. Use proper Godot 4.x signal connection syntax
+	19. Ensure all code is syntactically correct and will run without errors
+	20. Test your code mentally to ensure it works as expected
+
+	COMMON ERRORS TO AVOID:
+	1. Undeclared variables at class level (always use var/const)
+	2. Missing semicolons at the end of statements
+	3. Incorrect signal connection syntax
+	4. Improper function declarations (missing colons)
+	5. Accessing properties of null objects (always check if objects exist)
+	6. Using incorrect Godot 4.x syntax (make sure to use the latest syntax)
+	7. Improper indentation or code structure
+	8. Missing or incorrect extends statement
+	9. Incorrect node paths or references
+	10. Improper initialization of arrays, dictionaries, or other data structures
+
+	MAZE GAME SPECIFIC GUIDELINES:
+	If creating a maze game:
+	1. Use a TileMap for the maze layout
+	2. Create a player character that can navigate the maze
+	3. Add collision detection for walls
+	4. Include a goal or objective (e.g., reach the exit, collect items)
+	5. Consider adding enemies or obstacles
+	6. Add a UI to show score, time, or other game information
+	7. Include a win condition and game over state
+	8. Add visual feedback for player actions
+	9. Consider adding sound effects for actions
+	10. Make sure the controls are intuitive (arrow keys or WASD)
+
+	IMPORTANT: Your response MUST include the code block with the ```gdscript marker exactly as shown above.
+	The code MUST be syntactically correct Godot 4.x GDScript code.
 	"""
 
 # Create a prompt for code generation
@@ -321,6 +392,10 @@ func create_code_prompt(description, current_scene):
 	8. Use consistent indentation with tabs or spaces
 	9. For Vector2 values, use Vector2(x, y) format, not (x, y)
 	10. For colors, use Color(r, g, b) or Color.html("#hexcode") format
+	11. Always use semicolons at the end of statements where appropriate
+	12. Always use proper function declarations with colons: func my_function():
+	13. Always properly initialize arrays and dictionaries: var my_array = []
+	14. Always use proper signal connections: some_node.signal_name.connect(self._on_signal_name)
 
 	IMPORTANT GUIDELINES:
 	1. Write a COMPLETE, SELF-CONTAINED script
@@ -333,6 +408,24 @@ func create_code_prompt(description, current_scene):
 	8. DO NOT include any file operations or loading external scripts
 	9. If creating nodes programmatically, do it in the _ready() function
 	10. Make sure to handle all necessary signals and input events
+	11. Make sure to properly handle node references and avoid null references
+	12. Use proper error handling with if statements to check for null values
+	13. Ensure all variables are properly declared before use
+	14. Use proper Godot 4.x signal connection syntax
+	15. Ensure all code is syntactically correct and will run without errors
+	16. Test your code mentally to ensure it works as expected
+
+	COMMON ERRORS TO AVOID:
+	1. Undeclared variables at class level (always use var/const)
+	2. Missing semicolons at the end of statements
+	3. Incorrect signal connection syntax
+	4. Improper function declarations (missing colons)
+	5. Accessing properties of null objects (always check if objects exist)
+	6. Using incorrect Godot 4.x syntax (make sure to use the latest syntax)
+	7. Improper indentation or code structure
+	8. Missing or incorrect extends statement
+	9. Incorrect node paths or references
+	10. Improper initialization of arrays, dictionaries, or other data structures
 	"""
 
 # Extract the analysis section from the response
@@ -362,18 +455,76 @@ func extract_explanation(response_text):
 func extract_code_from_response(response_text):
 	print("Extracting code from response...")
 
+	if response_text.is_empty():
+		print("ERROR: Response text is empty")
+		return ""
+
+	# Try to find code block with ```gdscript marker
 	var code_start = response_text.find("```gdscript")
 	if code_start == -1:
-		print("ERROR: No ```gdscript marker found in response")
-		return ""
+		# Try alternative markers
+		code_start = response_text.find("```GDScript")
+		if code_start == -1:
+			code_start = response_text.find("```gd")
+			if code_start == -1:
+				# Try just finding any code block
+				code_start = response_text.find("```")
+				if code_start == -1:
+					print("ERROR: No code block markers found in response")
+					return ""
+				else:
+					print("Found generic code block marker")
+					code_start += 3  # Skip past the ```
+			else:
+				print("Found ```gd marker")
+				code_start += 5  # Skip past the ```gd
+		else:
+			print("Found ```GDScript marker")
+			code_start += 11  # Skip past the ```GDScript
+	else:
+		print("Found ```gdscript marker")
+		code_start += 11  # Skip past the ```gdscript
 
-	var code_end = response_text.find("```", code_start + 11)
+	# Find the closing code block marker
+	var code_end = response_text.find("```", code_start)
 	if code_end == -1:
 		print("ERROR: No closing ``` marker found in response")
-		return ""
 
-	var code = response_text.substr(code_start + 11, code_end - code_start - 11).strip_edges()
+		# Try to extract until the end of the response as a fallback
+		var code = response_text.substr(code_start).strip_edges()
+		print("Fallback: Extracted code from marker to end, length: " + str(code.length()))
+
+		# Check if the code looks valid (contains extends or func keywords)
+		if code.find("extends") != -1 or code.find("func") != -1:
+			print("Fallback code appears to contain valid GDScript")
+			return code
+		else:
+			print("Fallback code doesn't appear to be valid GDScript")
+			return ""
+
+	var code = response_text.substr(code_start, code_end - code_start).strip_edges()
 	print("Extracted code length: " + str(code.length()))
+
+	# Validate that the code looks like GDScript
+	if code.find("extends") == -1 and code.find("func") == -1:
+		print("WARNING: Extracted code doesn't appear to contain GDScript keywords")
+
+		# If it doesn't look like GDScript, try to find another code block
+		var next_start = response_text.find("```", code_end + 3)
+		if next_start != -1:
+			print("Found another code block, trying that one instead")
+			next_start += 3
+			var next_end = response_text.find("```", next_start)
+			if next_end != -1:
+				var next_code = response_text.substr(next_start, next_end - next_start).strip_edges()
+				if next_code.find("extends") != -1 or next_code.find("func") != -1:
+					print("Found valid GDScript in second code block")
+					return next_code
+
+	# If the code doesn't start with 'extends', add it
+	if not code.strip_edges().begins_with("extends") and not "extends Node2D" in code:
+		print("Adding missing extends statement")
+		code = "extends Node2D\n\n" + code
 
 	return code
 

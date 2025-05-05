@@ -255,6 +255,10 @@ func create_game_prompt(description, current_scene):
 	8. Use consistent indentation with tabs or spaces
 	9. For Vector2 values, use Vector2(x, y) format, not (x, y)
 	10. For colors, use Color(r, g, b) or Color.html("#hexcode") format
+	11. Always use semicolons at the end of statements where appropriate
+	12. Always use proper function declarations with colons: func my_function():
+	13. Always properly initialize arrays and dictionaries: var my_array = []
+	14. Always use proper signal connections: some_node.signal_name.connect(self._on_signal_name)
 
 	IMPORTANT GUIDELINES:
 	1. Write a COMPLETE, SELF-CONTAINED script that creates all necessary nodes programmatically
@@ -271,6 +275,24 @@ func create_game_prompt(description, current_scene):
 	12. The script will be embedded in a scene file and attached to a Node2D
 	13. DO NOT include the script path or file name in your code
 	14. DO NOT include any file operations or loading external scripts
+	15. Make sure to properly handle node references and avoid null references
+	16. Use proper error handling with if statements to check for null values
+	17. Ensure all variables are properly declared before use
+	18. Use proper Godot 4.x signal connection syntax
+	19. Ensure all code is syntactically correct and will run without errors
+	20. Test your code mentally to ensure it works as expected
+
+	COMMON ERRORS TO AVOID:
+	1. Undeclared variables at class level (always use var/const)
+	2. Missing semicolons at the end of statements
+	3. Incorrect signal connection syntax
+	4. Improper function declarations (missing colons)
+	5. Accessing properties of null objects (always check if objects exist)
+	6. Using incorrect Godot 4.x syntax (make sure to use the latest syntax)
+	7. Improper indentation or code structure
+	8. Missing or incorrect extends statement
+	9. Incorrect node paths or references
+	10. Improper initialization of arrays, dictionaries, or other data structures
 	"""
 
 # Create a prompt for code generation
@@ -321,6 +343,10 @@ func create_code_prompt(description, current_scene):
 	8. Use consistent indentation with tabs or spaces
 	9. For Vector2 values, use Vector2(x, y) format, not (x, y)
 	10. For colors, use Color(r, g, b) or Color.html("#hexcode") format
+	11. Always use semicolons at the end of statements where appropriate
+	12. Always use proper function declarations with colons: func my_function():
+	13. Always properly initialize arrays and dictionaries: var my_array = []
+	14. Always use proper signal connections: some_node.signal_name.connect(self._on_signal_name)
 
 	IMPORTANT GUIDELINES:
 	1. Write a COMPLETE, SELF-CONTAINED script
@@ -333,6 +359,24 @@ func create_code_prompt(description, current_scene):
 	8. DO NOT include any file operations or loading external scripts
 	9. If creating nodes programmatically, do it in the _ready() function
 	10. Make sure to handle all necessary signals and input events
+	11. Make sure to properly handle node references and avoid null references
+	12. Use proper error handling with if statements to check for null values
+	13. Ensure all variables are properly declared before use
+	14. Use proper Godot 4.x signal connection syntax
+	15. Ensure all code is syntactically correct and will run without errors
+	16. Test your code mentally to ensure it works as expected
+
+	COMMON ERRORS TO AVOID:
+	1. Undeclared variables at class level (always use var/const)
+	2. Missing semicolons at the end of statements
+	3. Incorrect signal connection syntax
+	4. Improper function declarations (missing colons)
+	5. Accessing properties of null objects (always check if objects exist)
+	6. Using incorrect Godot 4.x syntax (make sure to use the latest syntax)
+	7. Improper indentation or code structure
+	8. Missing or incorrect extends statement
+	9. Incorrect node paths or references
+	10. Improper initialization of arrays, dictionaries, or other data structures
 	"""
 
 # Extract the analysis section from the response
