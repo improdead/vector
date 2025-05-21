@@ -51,9 +51,9 @@ func load_settings():
 		save_settings()
 
 	# Force model to Gemini 2.5 Flash
-	settings.model = "gemini-2.5-flash-preview-04-17"
-	print("Model forced to Gemini 2.5 Flash: " + settings.model)
-	save_settings()
+	# settings.model = "gemini-2.5-flash-preview-04-17"
+	# print("Model forced to Gemini 2.5 Flash: " + settings.model)
+	# save_settings()
 
 # Save settings to file
 func save_settings():

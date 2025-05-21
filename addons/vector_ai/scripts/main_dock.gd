@@ -38,6 +38,12 @@ func _on_generate_button_pressed():
 		$PanelContainer/VBoxContainer/OutputText.text = "Please enter a request."
 		return
 
+        # --- BEGIN NEW API KEY CHECK ---
+	if not plugin or plugin.settings.api_key.is_empty():
+		$PanelContainer/VBoxContainer/OutputText.text = "Error: API Key is missing. Please set your API key in the Vector AI settings (click the gear icon in the Vector AI dock)."
+		return
+        # --- END NEW API KEY CHECK ---
+
 	# Update UI
 	$PanelContainer/VBoxContainer/GenerateButton.disabled = true
 	$PanelContainer/VBoxContainer/OutputText.text = "Generating..."
@@ -87,16 +93,22 @@ func generate_game(description):
 		print("Received response from Gemini")
 
 		if error:
-			print("Error from Gemini: " + error)
-			$PanelContainer/VBoxContainer/OutputText.text = "Error: " + error
+			print("Vector AI Error: " + error) # Keep logging the raw error for debugging
+			var error_message = "An error occurred while communicating with the AI: %s" % error
+			error_message += "\n\nPlease check your API key in Settings, your internet connection, or try simplifying your request."
+			error_message += "\nIf the error is 'Empty response from API' or similar, the AI might not have been able to generate content for your specific request (e.g. due to safety filters or request complexity). Consider rephrasing or simplifying."
+			$PanelContainer/VBoxContainer/OutputText.text = error_message
 		else:
 			print("Response received successfully")
 
 			# Extract code from the response
 			var code = extract_code_from_response(response.text)
 			if code.is_empty():
-				print("No code found in the response")
-				$PanelContainer/VBoxContainer/OutputText.text = "No code found in the response."
+				print("Vector AI: No code found in response. Full response text for debugging (first 1000 chars):\n" + response.text.substr(0, 1000))
+				var output_message = "Could not find GDScript code in the AI's response."
+				output_message += "\nThis can happen if the AI's response doesn't follow the expected format."
+				output_message += "\nConsider rephrasing your request or trying a different AI model if the problem persists."
+				$PanelContainer/VBoxContainer/OutputText.text = output_message
 			else:
 				print("Code extracted successfully, length: " + str(code.length()))
 
@@ -136,8 +148,19 @@ func generate_game(description):
 						# This will only work if the scene is already open in the editor
 						plugin.get_editor_interface().reload_scene_from_path("res://main.tscn")
 				else:
-					print("Error creating scene: " + result.message)
-					$PanelContainer/VBoxContainer/OutputText.text = "Error creating scene: " + result.message
+					# --- MODIFIED ERROR HANDLING ---
+					if result.has("script_validation_failed") and result.script_validation_failed:
+						var validation_error_message = "Error: The AI-generated code is not valid GDScript and could not be applied to the scene."
+						validation_error_message += "\nThis might be due to the complexity of the request or an issue with the AI's code generation."
+						validation_error_message += "\nPlease try simplifying your request or rephrasing it."
+						validation_error_message += "\nDetails: " + result.message # Append the detailed message from scene_generator
+						$PanelContainer/VBoxContainer/OutputText.text = validation_error_message
+						print("Vector AI: Script validation failed. Details: " + result.message)
+					else:
+						# Existing generic error message for other scene creation failures
+						$PanelContainer/VBoxContainer/OutputText.text = "Error creating scene: " + result.message
+						print("Error creating scene: " + result.message) # Keep original console log for this case
+					# --- END MODIFIED ERROR HANDLING ---
 
 		# Re-enable the generate button
 		$PanelContainer/VBoxContainer/GenerateButton.disabled = false
@@ -157,12 +180,21 @@ func generate_code(description):
 	# Send the request to Gemini
 	gemini_client.send_request(prompt, func(response, error):
 		if error:
-			$PanelContainer/VBoxContainer/OutputText.text = "Error: " + error
+			print("Vector AI Error: " + error) # Keep logging the raw error for debugging
+			var error_message = "An error occurred while communicating with the AI: %s" % error
+			error_message += "\n\nPlease check your API key in Settings, your internet connection, or try simplifying your request."
+			error_message += "\nIf the error is 'Empty response from API' or similar, the AI might not have been able to generate content for your specific request (e.g. due to safety filters or request complexity). Consider rephrasing or simplifying."
+			$PanelContainer/VBoxContainer/OutputText.text = error_message
 		else:
+			print("Response received successfully") # Added this line to match the generate_game structure for context, will be printed if no error
 			# Extract code from the response
 			var code = extract_code_from_response(response.text)
 			if code.is_empty():
-				$PanelContainer/VBoxContainer/OutputText.text = "No code found in the response."
+				print("Vector AI: No code found in response. Full response text for debugging (first 1000 chars):\n" + response.text.substr(0, 1000))
+				var output_message = "Could not find GDScript code in the AI's response."
+				output_message += "\nThis can happen if the AI's response doesn't follow the expected format."
+				output_message += "\nConsider rephrasing your request or trying a different AI model if the problem persists."
+				$PanelContainer/VBoxContainer/OutputText.text = output_message
 			else:
 				# Create the scene with the generated code
 				var result = scene_generator.create_scene_with_code(code)
@@ -196,7 +228,19 @@ func generate_code(description):
 						# This will only work if the scene is already open in the editor
 						plugin.get_editor_interface().reload_scene_from_path("res://main.tscn")
 				else:
-					$PanelContainer/VBoxContainer/OutputText.text = "Error creating scene: " + result.message
+					# --- MODIFIED ERROR HANDLING ---
+					if result.has("script_validation_failed") and result.script_validation_failed:
+						var validation_error_message = "Error: The AI-generated code is not valid GDScript and could not be applied to the scene."
+						validation_error_message += "\nThis might be due to the complexity of the request or an issue with the AI's code generation."
+						validation_error_message += "\nPlease try simplifying your request or rephrasing it."
+						validation_error_message += "\nDetails: " + result.message # Append the detailed message from scene_generator
+						$PanelContainer/VBoxContainer/OutputText.text = validation_error_message
+						print("Vector AI: Script validation failed. Details: " + result.message)
+					else:
+						# Existing generic error message for other scene creation failures
+						$PanelContainer/VBoxContainer/OutputText.text = "Error creating scene: " + result.message
+						print("Error creating scene: " + result.message) # Keep original console log for this case
+					# --- END MODIFIED ERROR HANDLING ---
 
 		# Re-enable the generate button
 		$PanelContainer/VBoxContainer/GenerateButton.disabled = false

@@ -142,19 +142,19 @@ func _on_request_completed(result, response_code, headers, body):
 		return
 
 	if response_text.is_empty():
-		print("Empty response text extracted from API response")
+		print("WARNING: Empty response text extracted from API response. This may be due to model safety filters, an overly restrictive prompt, or an issue with the API itself.")
 		print("Full response data: " + str(response_data))
 
 		# Try to generate a fallback response for debugging
 		var fallback_response = "extends Node2D\n\nfunc _ready():\n\tprint(\"Fallback response - API returned empty content\")\n\t# Create a label to show this is a fallback response\n\tvar label = Label.new()\n\tlabel.text = \"Vector AI - API returned empty content. Please try again.\"\n\tlabel.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER\n\tlabel.vertical_alignment = VERTICAL_ALIGNMENT_CENTER\n\tlabel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)\n\n\tvar canvas_layer = CanvasLayer.new()\n\tcanvas_layer.add_child(label)\n\tadd_child(canvas_layer)"
 
 		# Decide whether to use fallback or return error
-		var use_fallback = false  # Set to true to use fallback code instead of error
+		var use_fallback = true  # Set to true to use fallback code instead of error
 
 		if use_fallback:
-			print("Using fallback response code")
+			print("Using fallback response code because the API returned empty content.")
 			var response = {
-				"text": "ANALYSIS:\nAPI returned an empty response. Using fallback code.\n\nIMPLEMENTATION:\n```gdscript\n" + fallback_response + "\n```\n\nEXPLANATION:\nThis is a fallback response because the API returned empty content."
+				"text": "ANALYSIS:\nAPI returned an empty response. Using fallback code. This might be due to model safety filters or an issue with the prompt/API.\n\nIMPLEMENTATION:\n```gdscript\n" + fallback_response + "\n```\n\nEXPLANATION:\nThis is a fallback response because the API returned empty content."
 			}
 			current_callback.call(response, null)
 		else:

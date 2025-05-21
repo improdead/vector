@@ -70,6 +70,27 @@ func create_scene_with_code(code):
 	code = clean_code(code)
 	print("Code cleaned, length: " + str(code.length()))
 
+	# --- BEGIN GDScript Validation ---
+	var validator_script = GDScript.new()
+	validator_script.source_code = code # Use the cleaned code
+	var validation_error = validator_script.reload() # Attempt to compile
+
+	if validation_error != OK:
+		var error_message = "Generated script failed validation: "
+		# Attempt to get more detailed error information if possible (may vary by Godot version)
+		# This is a basic way; more specific error line/message might be hard without parsing error string
+		error_message += "Error code %s. " % validation_error 
+		# validator_script.get_script_error() or similar might exist in some versions but not universally.
+		# For now, a generic message is fine.
+		print(error_message + "Problematic code (first 500 chars):\n" + code.substr(0,500)) # Log for debugging
+		return {
+			"success": false,
+			"message": error_message + "The AI-generated code is not valid GDScript. Cannot apply to scene.",
+			"backup_path": null, # Or consider if backup is made before this point
+			"script_validation_failed": true # Add a new flag
+		}
+	# --- END GDScript Validation ---
+
 	# Create a unique ID for the scene and script
 	var unique_id = str(randi() % 10000000)
 	var uid = "uid://c" + str(randi() % 10000000) + str(randi() % 10000000) + "abc"
@@ -146,6 +167,12 @@ script = SubResource("GDScript_""" + unique_id + """")
 			"message": "File does not exist after writing!",
 			"backup_path": backup_path
 		}
+
+	# --- NEWLY ADDED LINE ---
+	var reload_result = ensure_godot_reloads_scene(scene_path) # Use scene_path (res://)
+	if not reload_result.success:
+		print("WARNING: Efforts to ensure Godot reloads the scene encountered issues: " + reload_result.message)
+	# --- END OF NEWLY ADDED LINE ---
 
 	# Try to notify Godot about the file change
 	print("Notifying Godot about file change...")
